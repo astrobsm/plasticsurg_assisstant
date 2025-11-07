@@ -1,0 +1,1 @@
+export default function TreatmentPlans() { return <div>Treatment Plans Page</div>; }

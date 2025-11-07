@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Test Patients - UNTH Plastic Surgery Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0E9F6E;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #0E9F6E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0a7c56;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .patient-count {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Add Test Patients</h1>
+        <p>This utility will add sample patients to test the Risk Assessment functionality.</p>
+        
+        <div class="patient-count" id="patientCount">
+            <strong>Current Patients:</strong> <span id="count">Loading...</span>
+        </div>
+
+        <button onclick="addTestPatients()">Add Sample Patients</button>
+        <button onclick="clearAllPatients()">Clear All Patients</button>
+        <button onclick="showPatients()">Show Current Patients</button>
+        
+        <div id="status" class="status"></div>
+        <div id="patientList"></div>
+    </div>
+
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+    <script>
+        // Database setup
+        const db = new Dexie('PlasticSurgeonDB');
+        
+        db.version(1).stores({
+            patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+            treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+            plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+            sync_queue: '++id, action, table, local_id, created_at, retries',
+            cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+            testSessions: '++id, userId, topicId, startedAt, completedAt',
+            cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+            cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+            ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+            clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+            surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+            lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+            lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at'
+        });
+
+        db.version(2).stores({
+            patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+            treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+            plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+            sync_queue: '++id, action, table, local_id, created_at, retries',
+            cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+            testSessions: '++id, userId, topicId, startedAt, completedAt',
+            cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+            cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+            ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+            clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+            surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+            lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+            lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+            gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at'
+        });
+
+        db.version(3).stores({
+            patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+            treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+            plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+            sync_queue: '++id, action, table, local_id, created_at, retries',
+            cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+            testSessions: '++id, userId, topicId, startedAt, completedAt',
+            cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+            cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+            ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+            clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+            surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+            lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+            lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+            gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+            dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+            pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+            nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at'
+        });
+
+        const samplePatients = [
+            {
+                hospital_number: 'UNH001',
+                first_name: 'Ada',
+                last_name: 'Okafor',
+                dob: '1985-03-15',
+                sex: 'female',
+                phone: '+234 803 123 4567',
+                address: 'No. 12 University Road, Nsukka',
+                allergies: ['Penicillin', 'Latex'],
+                comorbidities: ['Hypertension'],
+                created_at: new Date(),
+                updated_at: new Date(),
+                synced: false
+            },
+            {
+                hospital_number: 'UNH002',
+                first_name: 'Chukwu',
+                last_name: 'Emeka',
+                dob: '1978-11-22',
+                sex: 'male',
+                phone: '+234 806 987 6543',
+                address: 'No. 45 Ogige Road, Nsukka',
+                allergies: ['Sulfa drugs'],
+                comorbidities: ['Diabetes Type 2', 'Hypertension'],
+                created_at: new Date(),
+                updated_at: new Date(),
+                synced: false
+            },
+            {
+                hospital_number: 'UNH003',
+                first_name: 'Ngozi',
+                last_name: 'Eze',
+                dob: '1992-07-08',
+                sex: 'female',
+                phone: '+234 801 234 5678',
+                address: 'No. 78 Market Road, Enugu',
+                allergies: [],
+                comorbidities: [],
+                created_at: new Date(),
+                updated_at: new Date(),
+                synced: false
+            },
+            {
+                hospital_number: 'UNH004',
+                first_name: 'Kelechi',
+                last_name: 'Nwankwo',
+                dob: '1965-12-03',
+                sex: 'male',
+                phone: '+234 807 345 6789',
+                address: 'No. 23 Coal City Avenue, Enugu',
+                allergies: ['Codeine'],
+                comorbidities: ['COPD', 'Arthritis'],
+                created_at: new Date(),
+                updated_at: new Date(),
+                synced: false
+            },
+            {
+                hospital_number: 'UNH005',
+                first_name: 'Adaeze',
+                last_name: 'Okoro',
+                dob: '1990-05-20',
+                sex: 'female',
+                phone: '+234 809 456 7890',
+                address: 'No. 56 Independence Layout, Enugu',
+                allergies: ['Iodine'],
+                comorbidities: ['Asthma'],
+                created_at: new Date(),
+                updated_at: new Date(),
+                synced: false
+            }
+        ];
+
+        async function updatePatientCount() {
+            try {
+                const count = await db.patients.count();
+                document.getElementById('count').textContent = count;
+            } catch (error) {
+                document.getElementById('count').textContent = 'Error loading count';
+                console.error('Error getting patient count:', error);
+            }
+        }
+
+        async function addTestPatients() {
+            try {
+                showStatus('Adding sample patients...', 'info');
+                
+                // Add each patient
+                for (const patient of samplePatients) {
+                    await db.patients.add(patient);
+                }
+                
+                showStatus('✅ Successfully added 5 sample patients!', 'success');
+                updatePatientCount();
+            } catch (error) {
+                showStatus('❌ Error adding patients: ' + error.message, 'error');
+                console.error('Error adding patients:', error);
+            }
+        }
+
+        async function clearAllPatients() {
+            if (!confirm('Are you sure you want to delete ALL patients? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                showStatus('Clearing all patients...', 'info');
+                await db.patients.clear();
+                await db.dvt_assessments.clear();
+                await db.pressure_sore_assessments.clear();
+                await db.nutritional_assessments.clear();
+                showStatus('✅ All patients and assessments cleared!', 'success');
+                updatePatientCount();
+                document.getElementById('patientList').innerHTML = '';
+            } catch (error) {
+                showStatus('❌ Error clearing patients: ' + error.message, 'error');
+                console.error('Error clearing patients:', error);
+            }
+        }
+
+        async function showPatients() {
+            try {
+                const patients = await db.patients.orderBy('created_at').reverse().toArray();
+                const patientList = document.getElementById('patientList');
+                
+                if (patients.length === 0) {
+                    patientList.innerHTML = '<p>No patients found. Add some sample patients first.</p>';
+                    return;
+                }
+
+                let html = '<h3>Current Patients:</h3><ul>';
+                patients.forEach(patient => {
+                    html += `<li><strong>${patient.first_name} ${patient.last_name}</strong> (${patient.hospital_number}) - ${patient.sex}, ${patient.phone}</li>`;
+                });
+                html += '</ul>';
+                
+                patientList.innerHTML = html;
+            } catch (error) {
+                showStatus('❌ Error loading patients: ' + error.message, 'error');
+                console.error('Error loading patients:', error);
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePatientCount();
+        });
+    </script>
+</body>
+</html>

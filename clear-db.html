@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear IndexedDB</title>
+</head>
+<body>
+    <h1>Clear PlasticSurgeonDB IndexedDB</h1>
+    <button onclick="clearDB()">Clear Database</button>
+    <div id="status"></div>
+    
+    <script>
+        async function clearDB() {
+            const status = document.getElementById('status');
+            try {
+                // Delete the database
+                const deleteRequest = indexedDB.deleteDatabase('PlasticSurgeonDB');
+                
+                deleteRequest.onsuccess = function() {
+                    status.innerHTML = '<p style="color: green;">Database cleared successfully!</p>';
+                };
+                
+                deleteRequest.onerror = function() {
+                    status.innerHTML = '<p style="color: red;">Failed to clear database</p>';
+                };
+                
+                deleteRequest.onblocked = function() {
+                    status.innerHTML = '<p style="color: orange;">Database deletion blocked - close all app tabs first</p>';
+                };
+                
+            } catch (error) {
+                status.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

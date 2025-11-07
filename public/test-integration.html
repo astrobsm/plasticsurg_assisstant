@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNTH Integration Test</title>
+    <script src="https://unpkg.com/dexie@3.2.2/dist/dexie.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background-color: #0E9F6E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #0a8359;
+        }
+        .danger {
+            background-color: #DC2626;
+        }
+        .danger:hover {
+            background-color: #b91c1c;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 UNTH Plastic Surgery PWA - Integration Test</h1>
+    
+    <div class="card">
+        <h2>Database Integration Test</h2>
+        <p>Test the complete database-frontend-backend integration for the UNTH Plastic Surgery Assistant PWA.</p>
+        
+        <button class="button" onclick="initDatabase()">Initialize Database</button>
+        <button class="button" onclick="testPatientCreation()">Test Patient Creation</button>
+        <button class="button" onclick="testRiskAssessments()">Test Risk Assessments</button>
+        <button class="button" onclick="testDataRetrieval()">Test Data Retrieval</button>
+        <button class="button danger" onclick="clearDatabase()">Clear Database</button>
+        
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Database initialization matching the main app
+        const db = new Dexie('UNTHPlasticSurgeryDB');
+        
+        db.version(3).stores({
+            patients: '++id, hospital_number, first_name, last_name, sex, dob, phone, email, address, emergency_contact_name, emergency_contact_phone, insurance_provider, insurance_number, created_at, updated_at, synced, deleted',
+            treatment_plans: '++id, patient_id, created_by, title, description, priority, status, start_date, target_completion_date, created_at, updated_at, synced, deleted',
+            plan_steps: '++id, plan_id, step_number, title, description, type, status, assigned_to, due_date, completed_date, notes, created_at, updated_at, synced, deleted',
+            appointments: '++id, patient_id, appointment_type, scheduled_datetime, duration_minutes, provider, location, status, notes, created_at, updated_at, synced, deleted',
+            medical_records: '++id, patient_id, record_type, title, content, attachments, recorded_by, recorded_date, created_at, updated_at, synced, deleted',
+            prescriptions: '++id, patient_id, medication_name, dosage, frequency, duration, prescribing_doctor, prescribed_date, status, notes, created_at, updated_at, synced, deleted',
+            lab_orders: '++id, patient_id, test_name, test_category, ordered_by, ordered_date, collection_date, status, priority, notes, created_at, updated_at, synced, deleted',
+            lab_results: '++id, lab_order_id, patient_id, test_name, result_value, reference_range, status, result_date, reported_by, notes, created_at, updated_at, synced, deleted',
+            // Risk Assessment Tables
+            dvt_assessments: '++id, patient_id, assessment_date, assessed_by, score, risk_level, status, created_at, updated_at',
+            pressure_sore_assessments: '++id, patient_id, assessment_date, assessed_by, score, risk_level, status, created_at, updated_at',
+            nutritional_assessments: '++id, patient_id, assessment_date, assessed_by, score, risk_level, status, created_at, updated_at'
+        });
+
+        // Utility functions
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function updateResults(content) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = content;
+        }
+
+        function log(message) {
+            console.log(message);
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<pre>${new Date().toISOString()}: ${message}</pre>`;
+        }
+
+        // Database operations
+        async function initDatabase() {
+            try {
+                updateStatus('Initializing database...', 'info');
+                
+                await db.open();
+                const tables = db.tables.map(t => t.name);
+                
+                log('Database initialized successfully');
+                log(`Available tables: ${tables.join(', ')}`);
+                
+                updateStatus('Database initialized successfully!', 'success');
+            } catch (error) {
+                log(`Database initialization error: ${error.message}`);
+                updateStatus(`Database initialization failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPatientCreation() {
+            try {
+                updateStatus('Testing patient creation...', 'info');
+                
+                const testPatient = {
+                    hospital_number: `UNTH/2025/TEST001`,
+                    first_name: 'Test',
+                    last_name: 'Patient',
+                    sex: 'male',
+                    dob: '1990-01-01',
+                    phone: '+234-801-234-5678',
+                    email: 'test.patient@example.com',
+                    address: 'Test Address, Enugu',
+                    emergency_contact_name: 'Emergency Contact',
+                    emergency_contact_phone: '+234-801-234-5679',
+                    insurance_provider: 'Test Insurance',
+                    insurance_number: 'INS001',
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                    synced: false,
+                    deleted: false
+                };
+
+                const patientId = await db.patients.add(testPatient);
+                log(`Patient created with ID: ${patientId}`);
+                
+                // Verify creation
+                const savedPatient = await db.patients.get(patientId);
+                log(`Patient verified: ${savedPatient.first_name} ${savedPatient.last_name}`);
+                
+                updateStatus('Patient creation test passed!', 'success');
+                return patientId;
+            } catch (error) {
+                log(`Patient creation error: ${error.message}`);
+                updateStatus(`Patient creation failed: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function testRiskAssessments() {
+            try {
+                updateStatus('Testing risk assessments...', 'info');
+                
+                // First, ensure we have a patient
+                let patientId = await testPatientCreation();
+                if (!patientId) {
+                    throw new Error('No patient available for risk assessment test');
+                }
+
+                // Test DVT Risk Assessment
+                const dvtAssessment = {
+                    patient_id: patientId.toString(),
+                    assessment_date: new Date(),
+                    assessed_by: 'Dr. Test',
+                    score: 3,
+                    risk_level: 'high',
+                    ai_recommendations: [
+                        'Consider immediate anticoagulation if no contraindications',
+                        'Order urgent duplex ultrasound or CT venography'
+                    ],
+                    action_plan: [
+                        {
+                            id: 'action_1',
+                            description: 'Perform urgent imaging',
+                            priority: 'urgent',
+                            assigned_to: 'Radiology Team',
+                            status: 'pending'
+                        }
+                    ],
+                    status: 'active',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                const dvtId = await db.dvt_assessments.add(dvtAssessment);
+                log(`DVT assessment created with ID: ${dvtId}`);
+
+                // Test Pressure Sore Risk Assessment
+                const pressureAssessment = {
+                    patient_id: patientId.toString(),
+                    assessment_date: new Date(),
+                    assessed_by: 'Nurse Test',
+                    score: 12,
+                    risk_level: 'high',
+                    ai_recommendations: [
+                        'Implement 2-hourly repositioning schedule',
+                        'Use pressure-redistributing support surface'
+                    ],
+                    action_plan: [],
+                    status: 'active',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                const pressureId = await db.pressure_sore_assessments.add(pressureAssessment);
+                log(`Pressure sore assessment created with ID: ${pressureId}`);
+
+                // Test Nutritional Risk Assessment
+                const nutritionalAssessment = {
+                    patient_id: patientId.toString(),
+                    assessment_date: new Date(),
+                    assessed_by: 'Dietitian Test',
+                    score: 2,
+                    risk_level: 'high',
+                    ai_recommendations: [
+                        'Urgent dietitian referral',
+                        'Implement nutritional care plan'
+                    ],
+                    action_plan: [],
+                    status: 'active',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                const nutritionalId = await db.nutritional_assessments.add(nutritionalAssessment);
+                log(`Nutritional assessment created with ID: ${nutritionalId}`);
+
+                updateStatus('Risk assessments test passed!', 'success');
+                return { dvtId, pressureId, nutritionalId, patientId };
+            } catch (error) {
+                log(`Risk assessments error: ${error.message}`);
+                updateStatus(`Risk assessments failed: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function testDataRetrieval() {
+            try {
+                updateStatus('Testing data retrieval...', 'info');
+                
+                // Get all patients
+                const patients = await db.patients.toArray();
+                log(`Found ${patients.length} patients`);
+
+                // Get all risk assessments
+                const dvtAssessments = await db.dvt_assessments.toArray();
+                const pressureAssessments = await db.pressure_sore_assessments.toArray();
+                const nutritionalAssessments = await db.nutritional_assessments.toArray();
+
+                log(`DVT assessments: ${dvtAssessments.length}`);
+                log(`Pressure sore assessments: ${pressureAssessments.length}`);
+                log(`Nutritional assessments: ${nutritionalAssessments.length}`);
+
+                // Test patient-specific queries
+                if (patients.length > 0) {
+                    const patientId = patients[0].id.toString();
+                    const patientDVTs = await db.dvt_assessments
+                        .where('patient_id')
+                        .equals(patientId)
+                        .toArray();
+                    
+                    log(`Patient ${patientId} has ${patientDVTs.length} DVT assessments`);
+                }
+
+                updateStatus('Data retrieval test passed!', 'success');
+                
+                // Display summary
+                updateResults(`
+                    <h3>Database Summary:</h3>
+                    <ul>
+                        <li>Patients: ${patients.length}</li>
+                        <li>DVT Assessments: ${dvtAssessments.length}</li>
+                        <li>Pressure Sore Assessments: ${pressureAssessments.length}</li>
+                        <li>Nutritional Assessments: ${nutritionalAssessments.length}</li>
+                    </ul>
+                    <h4>Latest Patient:</h4>
+                    <pre>${patients.length > 0 ? JSON.stringify(patients[patients.length - 1], null, 2) : 'No patients found'}</pre>
+                `);
+            } catch (error) {
+                log(`Data retrieval error: ${error.message}`);
+                updateStatus(`Data retrieval failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearDatabase() {
+            if (!confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                updateStatus('Clearing database...', 'info');
+                
+                await db.transaction('rw', 
+                    db.patients, 
+                    db.dvt_assessments, 
+                    db.pressure_sore_assessments, 
+                    db.nutritional_assessments, 
+                    db.treatment_plans, 
+                    db.plan_steps,
+                    async () => {
+                        await db.patients.clear();
+                        await db.dvt_assessments.clear();
+                        await db.pressure_sore_assessments.clear();
+                        await db.nutritional_assessments.clear();
+                        await db.treatment_plans.clear();
+                        await db.plan_steps.clear();
+                    });
+
+                log('Database cleared successfully');
+                updateStatus('Database cleared!', 'success');
+                updateResults('');
+            } catch (error) {
+                log(`Database clear error: ${error.message}`);
+                updateStatus(`Database clear failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-initialize when page loads
+        window.onload = function() {
+            updateStatus('Integration test ready. Click "Initialize Database" to begin.', 'info');
+            log('UNTH Plastic Surgery PWA Integration Test Loaded');
+            log('Ready for testing database-frontend-backend integration');
+        };
+    </script>
+</body>
+</html>

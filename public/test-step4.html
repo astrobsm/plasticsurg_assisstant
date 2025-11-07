@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Patient Registration Step 4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #0E9F6E;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .step {
+            background: #DBEAFE;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #F0FDF4;
+            border-left: 3px solid #0E9F6E;
+            border-radius: 3px;
+        }
+        .button {
+            display: inline-block;
+            background: #0E9F6E;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #059669;
+        }
+        .warning {
+            background: #FEE2E2;
+            border-left: 4px solid #DC2626;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🏥 How to Access Step 4 of Patient Registration</h1>
+        <p>The enhanced risk assessment features with Caprini Score, auto-BMI calculation, and AI meal plan generation are located in <strong>Step 4</strong> of the patient registration form.</p>
+
+        <div class="instructions">
+            <h3>📋 Step-by-Step Instructions:</h3>
+            <div class="step">
+                <strong>Step 1:</strong> Click the button below to open the main application
+            </div>
+            <div class="step">
+                <strong>Step 2:</strong> Navigate to <strong>"Patients"</strong> page (left sidebar)
+            </div>
+            <div class="step">
+                <strong>Step 3:</strong> Click <strong>"Register New Patient"</strong> button (top right, green button)
+            </div>
+            <div class="step">
+                <strong>Step 4:</strong> Fill in the required fields in Step 1 (Bio-data):
+                <ul>
+                    <li>Hospital Number (e.g., UNTH/2025/001)</li>
+                    <li>First Name, Last Name</li>
+                    <li>Date of Birth</li>
+                    <li>Gender</li>
+                    <li>Phone Number</li>
+                </ul>
+            </div>
+            <div class="step">
+                <strong>Step 5:</strong> Click <strong>"Next"</strong> to go to Step 2 (Contact Information)
+            </div>
+            <div class="step">
+                <strong>Step 6:</strong> Fill in contact details and click <strong>"Next"</strong>
+            </div>
+            <div class="step">
+                <strong>Step 7:</strong> Fill in Step 3 (Clinical Information) and click <strong>"Next"</strong>
+            </div>
+            <div class="step">
+                <strong>Step 8:</strong> You're now at <strong>Step 4 - Risk Assessment</strong>! 🎉
+            </div>
+        </div>
+
+        <h2>✨ What You'll See in Step 4:</h2>
+        <ul class="feature-list">
+            <li>📊 <strong>VTE Risk Assessment (Caprini Score)</strong> - 35 risk factors organized by point value (1, 2, 3, 5 points)</li>
+            <li>🛏️ <strong>Pressure Sore Risk Assessment (Braden Scale)</strong> - 6 domains with scoring</li>
+            <li>🍎 <strong>Nutritional Risk Assessment (MUST Score)</strong>:
+                <ul style="margin-top: 5px; padding-left: 20px;">
+                    <li>Height input (auto-calculates BMI)</li>
+                    <li>Weight input (auto-calculates BMI)</li>
+                    <li>BMI Display with color-coded categories</li>
+                    <li>Weight loss tracking</li>
+                </ul>
+            </li>
+            <li>🍽️ <strong>AI-Powered Meal Plan Button</strong> - Big green button to generate 7-day Nigerian meal plan</li>
+            <li>🤖 <strong>AI Recommendations</strong> - Evidence-based clinical recommendations for each assessment</li>
+            <li>⚕️ <strong>Clinical Information</strong>:
+                <ul style="margin-top: 5px; padding-left: 20px;">
+                    <li>Primary Diagnosis</li>
+                    <li>Comorbidities (Diabetes, Hypertension, Renal, Liver diseases)</li>
+                    <li>Current Medications</li>
+                    <li>Allergies</li>
+                    <li>Dietary Preferences</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="warning">
+            <h3>⚠️ Important Notes:</h3>
+            <ul>
+                <li>You <strong>MUST fill in Steps 1, 2, and 3</strong> before you can access Step 4</li>
+                <li>The form is a <strong>multi-step wizard</strong> - you cannot skip steps</li>
+                <li>BMI auto-calculates when you enter Height AND Weight</li>
+                <li>The meal plan button only appears after BMI is calculated</li>
+                <li>All features are in the <strong>main application</strong>, not on this test page</li>
+            </ul>
+        </div>
+
+        <h2>🚀 Quick Actions:</h2>
+        <a href="/" class="button">Open Main Application</a>
+        <a href="/patients" class="button">Go Directly to Patients Page</a>
+        <a href="/clear-db.html" class="button" style="background: #DC2626;">Reset Database (if needed)</a>
+
+        <div style="margin-top: 30px; padding: 20px; background: #F3F4F6; border-radius: 8px;">
+            <h3>🎯 Quick Test Scenario:</h3>
+            <p><strong>To quickly test the features:</strong></p>
+            <ol>
+                <li>Open the main application</li>
+                <li>Go to "Patients" page</li>
+                <li>Click "Register New Patient"</li>
+                <li>In Step 1, enter:
+                    <ul>
+                        <li>Hospital Number: <code>UNTH/2025/TEST001</code></li>
+                        <li>First Name: <code>Test</code></li>
+                        <li>Last Name: <code>Patient</code></li>
+                        <li>Date of Birth: <code>1990-01-01</code></li>
+                        <li>Gender: <code>Male</code></li>
+                        <li>Phone: <code>08012345678</code></li>
+                    </ul>
+                </li>
+                <li>Click "Next" (repeat for Steps 2 & 3 with any data)</li>
+                <li>In Step 4:
+                    <ul>
+                        <li>Enter <strong>Height: 170</strong> cm</li>
+                        <li>Enter <strong>Weight: 70</strong> kg</li>
+                        <li>Watch BMI auto-calculate to <strong>24.2</strong></li>
+                        <li>Add diagnosis: <code>Post-operative wound</code></li>
+                        <li>Add comorbidity: Select <code>diabetes</code></li>
+                        <li>Click the big green <strong>"Generate AI-Powered Weekly Meal Plan"</strong> button</li>
+                        <li>See the 7-day Nigerian meal plan appear with special diabetes-friendly meals!</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #EBF5FF; border-radius: 6px;">
+            <h4>📹 Expected Behavior:</h4>
+            <ul>
+                <li>✅ BMI calculates <strong>automatically</strong> when you type height and weight</li>
+                <li>✅ BMI shows in a <strong>blue box</strong> with category (Underweight/Normal/Overweight)</li>
+                <li>✅ Green button appears <strong>below the nutritional assessment</strong></li>
+                <li>✅ Clicking button generates <strong>meal plan in ~1 second</strong></li>
+                <li>✅ Meal plan shows <strong>7 days</strong> of Nigerian meals</li>
+                <li>✅ Each day shows Breakfast, Lunch, Dinner, Snacks</li>
+                <li>✅ Nutritional info shows calories, protein, carbs, fat, fiber</li>
+                <li>✅ Special instructions appear for diabetes/hypertension/renal/liver conditions</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('✅ Test page loaded. Follow the instructions above to access Step 4 of Patient Registration.');
+        console.log('💡 Remember: You must go through Steps 1, 2, and 3 first!');
+    </script>
+</body>
+</html>

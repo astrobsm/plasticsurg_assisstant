@@ -1,0 +1,2370 @@
+openapi: 3.0.3
+info:
+  title: Plastic Surgeon Assistant API
+  description: |
+    Comprehensive API for the Plastic Surgeon Assistant PWA - a clinical workflow management system for plastic surgery interns and residents.
+    
+    Features include:
+    - Patient management and medical records
+    - Treatment plan creation and tracking
+    - Step-by-step procedure checklists
+    - Laboratory orders and results
+    - Prescription management with drug interactions
+    - Continuing Medical Education (CME) with AI-powered content generation
+    - Real-time notifications and alerts
+    - Role-based access control (RBAC)
+    - Offline synchronization support
+    
+    Security: All endpoints require JWT authentication unless specified otherwise.
+    HIPAA Compliance: All patient data handling follows HIPAA guidelines.
+  version: 1.0.0
+  contact:
+    name: Plastic Surgeon Assistant API Support
+    email: support@plasticsurgeonassistant.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.plasticsurgeonassistant.com/v1
+    description: Production server
+  - url: https://staging-api.plasticsurgeonassistant.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with email/username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@hospital.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "SecurePassword123!"
+                remember_me:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token
+                  user:
+                    $ref: '#/components/schemas/User'
+                  expires_in:
+                    type: integer
+                    description: Token expiration time in seconds
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate current session and tokens
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # User Management
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Get paginated list of users (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or email
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Users
+      summary: Create new user
+      description: Create a new user account (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Patient Management
+  /patients:
+    get:
+      tags:
+        - Patients
+      summary: List patients
+      description: Get paginated list of patients with filtering options
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name, hospital number, or phone
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, discharged]
+      responses:
+        '200':
+          description: Patients retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Patients
+      summary: Create new patient
+      description: Register a new patient in the system
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePatientRequest'
+      responses:
+        '201':
+          description: Patient created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+
+  /patients/{id}:
+    get:
+      tags:
+        - Patients
+      summary: Get patient details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Patient details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDetail'
+
+    put:
+      tags:
+        - Patients
+      summary: Update patient
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePatientRequest'
+      responses:
+        '200':
+          description: Patient updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+
+  # Treatment Plans
+  /patients/{patientId}/treatment-plans:
+    get:
+      tags:
+        - Treatment Plans
+      summary: List patient treatment plans
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TreatmentPlanStatus'
+      responses:
+        '200':
+          description: Treatment plans retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TreatmentPlan'
+
+    post:
+      tags:
+        - Treatment Plans
+      summary: Create treatment plan
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTreatmentPlanRequest'
+      responses:
+        '201':
+          description: Treatment plan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentPlan'
+
+  /treatment-plans/{id}:
+    get:
+      tags:
+        - Treatment Plans
+      summary: Get treatment plan details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Treatment plan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentPlanDetail'
+
+    put:
+      tags:
+        - Treatment Plans
+      summary: Update treatment plan
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTreatmentPlanRequest'
+      responses:
+        '200':
+          description: Treatment plan updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentPlan'
+
+  /treatment-plans/{id}/steps:
+    get:
+      tags:
+        - Treatment Plan Steps
+      summary: List treatment plan steps
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/StepStatus'
+      responses:
+        '200':
+          description: Treatment plan steps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanStep'
+
+    post:
+      tags:
+        - Treatment Plan Steps
+      summary: Add step to treatment plan
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlanStepRequest'
+      responses:
+        '201':
+          description: Step added to treatment plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanStep'
+
+  /plan-steps/{id}:
+    put:
+      tags:
+        - Treatment Plan Steps
+      summary: Update plan step
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlanStepRequest'
+      responses:
+        '200':
+          description: Plan step updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanStep'
+
+    delete:
+      tags:
+        - Treatment Plan Steps
+      summary: Delete plan step
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Plan step deleted
+
+  /plan-steps/{id}/complete:
+    post:
+      tags:
+        - Treatment Plan Steps
+      summary: Mark step as completed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  description: Completion notes
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: File attachment IDs
+      responses:
+        '200':
+          description: Step marked as completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanStep'
+
+  # Laboratory Orders and Results
+  /patients/{patientId}/lab-orders:
+    get:
+      tags:
+        - Laboratory
+      summary: List patient lab orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/LabOrderStatus'
+      responses:
+        '200':
+          description: Lab orders retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LabOrder'
+
+    post:
+      tags:
+        - Laboratory
+      summary: Create lab order
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLabOrderRequest'
+      responses:
+        '201':
+          description: Lab order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabOrder'
+
+  /lab-orders/{id}/results:
+    post:
+      tags:
+        - Laboratory
+      summary: Submit lab results
+      description: Submit results for a lab order (Lab Staff only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabResultsRequest'
+      responses:
+        '200':
+          description: Lab results submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabOrder'
+
+  # Prescriptions
+  /patients/{patientId}/prescriptions:
+    get:
+      tags:
+        - Prescriptions
+      summary: List patient prescriptions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionStatus'
+      responses:
+        '200':
+          description: Prescriptions retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prescription'
+
+    post:
+      tags:
+        - Prescriptions
+      summary: Create prescription
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePrescriptionRequest'
+      responses:
+        '201':
+          description: Prescription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prescription'
+        '400':
+          description: Drug interaction warning
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  interactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DrugInteraction'
+
+  /drugs/search:
+    get:
+      tags:
+        - Prescriptions
+      summary: Search drugs
+      description: Search drugs database for autocomplete
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Drugs found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Drug'
+
+  /drugs/{id}/interactions:
+    get:
+      tags:
+        - Prescriptions
+      summary: Check drug interactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: with_drugs
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+          style: form
+          explode: false
+      responses:
+        '200':
+          description: Drug interactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DrugInteraction'
+
+  # Continuing Medical Education (CME)
+  /cme/topics:
+    get:
+      tags:
+        - CME
+      summary: List CME topics
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      responses:
+        '200':
+          description: CME topics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CMETopic'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - CME
+      summary: Generate CME topic
+      description: Generate AI-powered CME topic based on clinical data
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateCMETopicRequest'
+      responses:
+        '201':
+          description: CME topic generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CMETopic'
+        '400':
+          description: AI service not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "AI service not configured"
+
+  /cme/topics/{id}:
+    get:
+      tags:
+        - CME
+      summary: Get CME topic details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: CME topic details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CMETopicDetail'
+
+  /cme/topics/{id}/start-test:
+    post:
+      tags:
+        - CME
+      summary: Start CME test session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Test session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CMETestSession'
+
+  /cme/test-sessions/{id}/submit:
+    post:
+      tags:
+        - CME
+      summary: Submit CME test answers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitCMETestRequest'
+      responses:
+        '200':
+          description: Test submitted and graded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CMETestResult'
+
+  /cme/progress:
+    get:
+      tags:
+        - CME
+      summary: Get user's CME progress
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: CME progress retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CMEProgress'
+
+  /cme/certificates:
+    get:
+      tags:
+        - CME
+      summary: List user's CME certificates
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: CME certificates retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CMECertificate'
+
+  /cme/certificates/{id}/download:
+    get:
+      tags:
+        - CME
+      summary: Download CME certificate
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Certificate PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # Notifications
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: List user notifications
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: read
+          in: query
+          schema:
+            type: boolean
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/NotificationType'
+      responses:
+        '200':
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /notifications/{id}/read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+
+  /notifications/subscribe:
+    post:
+      tags:
+        - Notifications
+      summary: Subscribe to push notifications
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRequest'
+      responses:
+        '200':
+          description: Push subscription created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Push notifications enabled"
+
+  # File Management
+  /files/upload:
+    post:
+      tags:
+        - Files
+      summary: Upload file
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+                  enum: [patient_photo, document, lab_result, prescription, certificate]
+                patient_id:
+                  type: string
+                  format: uuid
+                  description: Associated patient ID (if applicable)
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUpload'
+
+  /files/{id}:
+    get:
+      tags:
+        - Files
+      summary: Download file
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # System Health and Monitoring
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check system health status
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: "healthy"
+                      ai_service:
+                        type: string
+                        example: "healthy"
+                      notification_service:
+                        type: string
+                        example: "healthy"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number for pagination
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Number of items per page
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized"
+              message:
+                type: string
+                example: "Valid authentication token required"
+
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Forbidden"
+              message:
+                type: string
+                example: "Insufficient permissions"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Not Found"
+              message:
+                type: string
+                example: "Resource not found"
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Validation Error"
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+  schemas:
+    # User Management Schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+        last_login:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserRole:
+      type: string
+      enum:
+        - super_admin
+        - consultant
+        - registrar
+        - intern
+        - nurse
+        - lab_staff
+        - pharmacy
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+        - role
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+
+    # Patient Management Schemas
+    Patient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        hospital_number:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [male, female, other]
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        emergency_contact:
+          type: object
+          properties:
+            name:
+              type: string
+            relationship:
+              type: string
+            phone:
+              type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        comorbidities:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, inactive, discharged]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PatientDetail:
+      allOf:
+        - $ref: '#/components/schemas/Patient'
+        - type: object
+          properties:
+            treatment_plans:
+              type: array
+              items:
+                $ref: '#/components/schemas/TreatmentPlan'
+            recent_lab_orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/LabOrder'
+            active_prescriptions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Prescription'
+
+    CreatePatientRequest:
+      type: object
+      required:
+        - hospital_number
+        - first_name
+        - last_name
+        - date_of_birth
+        - sex
+      properties:
+        hospital_number:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [male, female, other]
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        emergency_contact:
+          type: object
+          properties:
+            name:
+              type: string
+            relationship:
+              type: string
+            phone:
+              type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        comorbidities:
+          type: array
+          items:
+            type: string
+
+    UpdatePatientRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        emergency_contact:
+          type: object
+          properties:
+            name:
+              type: string
+            relationship:
+              type: string
+            phone:
+              type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        comorbidities:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, inactive, discharged]
+
+    # Treatment Plan Schemas
+    TreatmentPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        diagnosis:
+          type: string
+        status:
+          $ref: '#/components/schemas/TreatmentPlanStatus'
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        start_date:
+          type: string
+          format: date
+        planned_end_date:
+          type: string
+          format: date
+        actual_end_date:
+          type: string
+          format: date
+        description:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TreatmentPlanStatus:
+      type: string
+      enum: [draft, active, completed, cancelled, on_hold]
+
+    TreatmentPlanDetail:
+      allOf:
+        - $ref: '#/components/schemas/TreatmentPlan'
+        - type: object
+          properties:
+            steps:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlanStep'
+            patient:
+              $ref: '#/components/schemas/Patient'
+            created_by_user:
+              $ref: '#/components/schemas/User'
+            assigned_to_user:
+              $ref: '#/components/schemas/User'
+
+    CreateTreatmentPlanRequest:
+      type: object
+      required:
+        - title
+        - diagnosis
+        - start_date
+      properties:
+        title:
+          type: string
+        diagnosis:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        start_date:
+          type: string
+          format: date
+        planned_end_date:
+          type: string
+          format: date
+        description:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+
+    UpdateTreatmentPlanRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        diagnosis:
+          type: string
+        status:
+          $ref: '#/components/schemas/TreatmentPlanStatus'
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        planned_end_date:
+          type: string
+          format: date
+        description:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+
+    # Plan Step Schemas
+    PlanStep:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        plan_id:
+          type: string
+          format: uuid
+        step_number:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/StepStatus'
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigned_to:
+          type: string
+          format: uuid
+        due_date:
+          type: string
+          format: date-time
+        estimated_duration:
+          type: integer
+          description: Estimated duration in minutes
+        actual_duration:
+          type: integer
+          description: Actual duration in minutes
+        completed_at:
+          type: string
+          format: date-time
+        completion_notes:
+          type: string
+        dependencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of steps that must be completed first
+        attachments:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: File attachment IDs
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    StepStatus:
+      type: string
+      enum: [pending, in_progress, completed, overdue, cancelled]
+
+    CreatePlanStepRequest:
+      type: object
+      required:
+        - title
+        - step_number
+      properties:
+        step_number:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigned_to:
+          type: string
+          format: uuid
+        due_date:
+          type: string
+          format: date-time
+        estimated_duration:
+          type: integer
+        dependencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdatePlanStepRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/StepStatus'
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigned_to:
+          type: string
+          format: uuid
+        due_date:
+          type: string
+          format: date-time
+        estimated_duration:
+          type: integer
+        completion_notes:
+          type: string
+
+    # Laboratory Schemas
+    LabOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        ordered_by:
+          type: string
+          format: uuid
+        order_date:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/LabOrderStatus'
+        priority:
+          type: string
+          enum: [routine, urgent, stat]
+        tests:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabTest'
+        clinical_notes:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabResult'
+        results_date:
+          type: string
+          format: date-time
+        reviewed_by:
+          type: string
+          format: uuid
+        reviewed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LabOrderStatus:
+      type: string
+      enum: [pending, collected, processing, completed, cancelled]
+
+    LabTest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        category:
+          type: string
+        normal_range:
+          type: string
+        unit:
+          type: string
+
+    LabResult:
+      type: object
+      properties:
+        test_id:
+          type: string
+          format: uuid
+        value:
+          type: string
+        unit:
+          type: string
+        normal_range:
+          type: string
+        flag:
+          type: string
+          enum: [normal, high, low, critical, abnormal]
+        notes:
+          type: string
+
+    CreateLabOrderRequest:
+      type: object
+      required:
+        - tests
+      properties:
+        tests:
+          type: array
+          items:
+            type: string
+            format: uuid
+        priority:
+          type: string
+          enum: [routine, urgent, stat]
+        clinical_notes:
+          type: string
+
+    LabResultsRequest:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabResult'
+        notes:
+          type: string
+
+    # Prescription Schemas
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        prescribed_by:
+          type: string
+          format: uuid
+        drug_id:
+          type: string
+          format: uuid
+        drug_name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        route:
+          type: string
+          enum: [oral, iv, im, topical, inhalation, rectal, sublingual]
+        quantity:
+          type: string
+        refills:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/PrescriptionStatus'
+        instructions:
+          type: string
+        indication:
+          type: string
+        dispensed_at:
+          type: string
+          format: date-time
+        dispensed_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PrescriptionStatus:
+      type: string
+      enum: [active, completed, cancelled, expired, dispensed]
+
+    CreatePrescriptionRequest:
+      type: object
+      required:
+        - drug_id
+        - dosage
+        - frequency
+        - route
+        - quantity
+      properties:
+        drug_id:
+          type: string
+          format: uuid
+        dosage:
+          type: string
+        frequency:
+          type: string
+        route:
+          type: string
+          enum: [oral, iv, im, topical, inhalation, rectal, sublingual]
+        quantity:
+          type: string
+        refills:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        instructions:
+          type: string
+        indication:
+          type: string
+
+    Drug:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        generic_name:
+          type: string
+        brand_names:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        strength:
+          type: string
+        form:
+          type: string
+        contraindications:
+          type: array
+          items:
+            type: string
+        side_effects:
+          type: array
+          items:
+            type: string
+
+    DrugInteraction:
+      type: object
+      properties:
+        drug1_id:
+          type: string
+          format: uuid
+        drug1_name:
+          type: string
+        drug2_id:
+          type: string
+          format: uuid
+        drug2_name:
+          type: string
+        severity:
+          type: string
+          enum: [minor, moderate, major, contraindicated]
+        description:
+          type: string
+        mechanism:
+          type: string
+        management:
+          type: string
+
+    # CME Schemas
+    CMETopic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_duration:
+          type: integer
+          description: Estimated duration in minutes
+        credits_awarded:
+          type: number
+          format: float
+        week_of:
+          type: string
+          description: Week identifier (e.g., "2024-W45")
+        generated_from:
+          type: object
+          properties:
+            diagnoses:
+              type: array
+              items:
+                type: string
+            procedures:
+              type: array
+              items:
+                type: string
+            lab_findings:
+              type: array
+              items:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CMETopicDetail:
+      allOf:
+        - $ref: '#/components/schemas/CMETopic'
+        - type: object
+          properties:
+            learning_objectives:
+              type: array
+              items:
+                type: string
+            content:
+              type: string
+              description: Markdown formatted content
+            key_points:
+              type: array
+              items:
+                type: string
+            clinical_pearls:
+              type: array
+              items:
+                type: string
+            questions:
+              type: array
+              items:
+                $ref: '#/components/schemas/CMEQuestion'
+
+    CMEQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correct_answer:
+          type: integer
+          minimum: 0
+          maximum: 3
+        explanation:
+          type: string
+        category:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        points:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+
+    CMETestSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        topic_id:
+          type: string
+          format: uuid
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CMEQuestion'
+        started_at:
+          type: string
+          format: date-time
+        time_limit:
+          type: integer
+          description: Time limit in minutes
+
+    SubmitCMETestRequest:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Question ID to answer index mapping
+
+    CMETestResult:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        passed:
+          type: boolean
+        time_spent:
+          type: integer
+          description: Time spent in minutes
+        certificate_eligible:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+        detailed_results:
+          type: array
+          items:
+            type: object
+            properties:
+              question_id:
+                type: string
+                format: uuid
+              user_answer:
+                type: integer
+              correct_answer:
+                type: integer
+              is_correct:
+                type: boolean
+              points_earned:
+                type: integer
+
+    CMEProgress:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        topic_id:
+          type: string
+          format: uuid
+        completed:
+          type: boolean
+        best_score:
+          type: integer
+        attempts:
+          type: integer
+        time_spent:
+          type: integer
+          description: Total time spent in minutes
+        last_attempt:
+          type: string
+          format: date-time
+        certificate_earned:
+          type: boolean
+
+    CMECertificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        topic_id:
+          type: string
+          format: uuid
+        score:
+          type: integer
+        credits_earned:
+          type: number
+          format: float
+        issued_at:
+          type: string
+          format: date-time
+        valid_until:
+          type: string
+          format: date-time
+        certificate_url:
+          type: string
+          format: uri
+
+    GenerateCMETopicRequest:
+      type: object
+      properties:
+        focus_areas:
+          type: array
+          items:
+            type: string
+          description: Specific clinical areas to focus on
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        use_recent_data:
+          type: boolean
+          default: true
+          description: Whether to use recent clinical data from the system
+
+    # Notification Schemas
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          description: Additional notification data
+        read:
+          type: boolean
+        read_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationType:
+      type: string
+      enum:
+        - step_due
+        - step_overdue
+        - lab_results
+        - prescription_expiry
+        - system_alert
+        - cme_reminder
+        - patient_update
+
+    PushSubscriptionRequest:
+      type: object
+      required:
+        - endpoint
+        - keys
+      properties:
+        endpoint:
+          type: string
+          format: uri
+        keys:
+          type: object
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+
+    # File Management Schemas
+    FileUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        original_filename:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+          description: File size in bytes
+        type:
+          type: string
+          enum: [patient_photo, document, lab_result, prescription, certificate]
+        patient_id:
+          type: string
+          format: uuid
+        uploaded_by:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+
+    # Common Schemas
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+        has_next_page:
+          type: boolean
+        has_prev_page:
+          type: boolean
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management and profile operations
+  - name: Patients
+    description: Patient registration and medical record management
+  - name: Treatment Plans
+    description: Treatment plan creation and management
+  - name: Treatment Plan Steps
+    description: Individual step management within treatment plans
+  - name: Laboratory
+    description: Lab order management and results
+  - name: Prescriptions
+    description: Prescription management and drug interactions
+  - name: CME
+    description: Continuing Medical Education with AI-powered content
+  - name: Notifications
+    description: Real-time notifications and push messaging
+  - name: Files
+    description: File upload and management
+  - name: System
+    description: System health and monitoring
+
+security:
+  - BearerAuth: []
