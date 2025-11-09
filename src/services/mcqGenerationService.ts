@@ -1,6 +1,425 @@
 import { db } from '../db/database';
 import jsPDF from 'jspdf';
 
+// WACS Curriculum Topics Database
+export const WACS_CURRICULUM_TOPICS = {
+  // Part I - Principles of Surgery
+  part_i_principles: [
+    {
+      title: "Preoperative Management & Patient Assessment",
+      category: "Part I - Principles",
+      content: "Patient assessment for anaesthesia and surgery; applied physiology/anatomy/biochemistry (respiratory, cardiovascular, renal); principles of anaesthesia; fluid and electrolyte balance; shock management"
+    },
+    {
+      title: "Laboratory Investigations in Surgery",
+      category: "Part I - Principles",
+      content: "Biochemistry, haematology/transfusion, microbiology; blood grouping and cross-matching; coagulation studies; electrolyte monitoring"
+    },
+    {
+      title: "Imaging and Interventional Radiology",
+      category: "Part I - Principles",
+      content: "X-ray interpretation, ultrasound, CT scan, MRI; interventional radiology procedures; contrast studies"
+    },
+    {
+      title: "Management of Comorbid Conditions",
+      category: "Part I - Principles",
+      content: "Malaria in surgical patients, malnutrition, cardiovascular disorders, respiratory diseases, endocrine disorders (diabetes, thyroid), anaemia management, HIV/AIDS in surgical practice"
+    },
+    {
+      title: "Perioperative Care & Complications",
+      category: "Part I - Principles",
+      content: "Post-operative complications management, metabolic response to injury, DVT prophylaxis and treatment, acute renal failure in surgical patients"
+    },
+    {
+      title: "Sepsis, Asepsis & Infection Control",
+      category: "Part I - Principles",
+      content: "Sterilisation and disinfection principles, surgical site infection prevention, hand hygiene, theatre protocols"
+    },
+    {
+      title: "Antibiotics in Surgery",
+      category: "Part I - Principles",
+      content: "Prophylactic antibiotics, therapeutic antibiotic use, antibiotic resistance, surgical infections management"
+    },
+    {
+      title: "Theatre Design & Surgical Equipment",
+      category: "Part I - Principles",
+      content: "Theatre design principles, surgical diathermy (monopolar/bipolar), equipment sterilisation, theatre management"
+    },
+    {
+      title: "Trauma: Initial Resuscitation",
+      category: "Part I - Principles",
+      content: "ATLS principles, primary survey (ABCDE), venous access (peripheral, central), airway management, tracheostomy indications and technique"
+    },
+    {
+      title: "Wound Management & Fracture Care",
+      category: "Part I - Principles",
+      content: "Wound exploration, wound care principles, primary and secondary closure, fracture management basics, splinting and immobilisation"
+    },
+    {
+      title: "Day-Care Surgery & Ethics",
+      category: "Part I - Principles",
+      content: "Day-care surgery fundamentals, patient selection, surgical ethics, informed consent, medico-legal aspects, communication skills"
+    },
+    {
+      title: "Hospital Administration & Surgical Audit",
+      category: "Part I - Principles",
+      content: "Hospital management basics, report writing, presentation skills, computers in surgical practice, surgical audit principles"
+    }
+  ],
+
+  // Part I - Specialty Introductions
+  part_i_specialty: [
+    {
+      title: "General Surgery Emergencies",
+      category: "Part I - Specialty Intro",
+      content: "Common abdominal emergencies, acute abdomen, soft tissue infections, emergency presentations and management"
+    },
+    {
+      title: "Trauma & Emergency Assessment",
+      category: "Part I - Specialty Intro",
+      content: "Initial trauma assessment, resuscitation protocols, triage principles, mass casualty management basics"
+    },
+    {
+      title: "Urology Basics",
+      category: "Part I - Specialty Intro",
+      content: "Renal ultrasonography principles, bladder outlet obstruction, prostatic conditions (BPH, prostatitis), urethral problems, testicular conditions"
+    },
+    {
+      title: "Orthopaedics Fundamentals",
+      category: "Part I - Specialty Intro",
+      content: "Traction and immobilisation techniques, bone and joint infections (osteomyelitis, septic arthritis), bone tumours basics"
+    },
+    {
+      title: "Anaesthesia & Critical Care",
+      category: "Part I - Specialty Intro",
+      content: "Local anaesthesia, regional anaesthesia, general anaesthesia principles, analgesia management, ICU care basics"
+    },
+    {
+      title: "Paediatric Surgery Introduction",
+      category: "Part I - Specialty Intro",
+      content: "Paediatric patient assessment, hernias and hydroceles in children, stoma care, common childhood tumours"
+    },
+    {
+      title: "Plastic Surgery Basics",
+      category: "Part I - Specialty Intro",
+      content: "Principles of reconstructive surgery, basic burns management, common craniofacial abnormalities (cleft lip & palate)"
+    }
+  ],
+
+  // Part II - General Surgery
+  part_ii_general: [
+    {
+      title: "Advanced Trauma Management",
+      category: "Part II - General Surgery",
+      content: "Craniocerebral trauma, thoracic trauma (pneumothorax, haemothorax, flail chest), abdominal trauma (solid organ injury, hollow viscus), skeletal trauma, mass casualties"
+    },
+    {
+      title: "Surgical Infections & Abscesses",
+      category: "Part II - General Surgery",
+      content: "Breast abscess, injection site abscess, perianal abscess, pyomyositis, necrotizing fasciitis"
+    },
+    {
+      title: "Soft Tissue Lumps & Swellings",
+      category: "Part II - General Surgery",
+      content: "Lipoma, sebaceous cyst, dermoid cyst, ganglion, other benign soft tissue masses"
+    },
+    {
+      title: "Hernias - Comprehensive Management",
+      category: "Part II - General Surgery",
+      content: "Inguinal hernia (direct/indirect), femoral hernia, umbilical/paraumbilical hernia, epigastric hernia, incisional hernia repair"
+    },
+    {
+      title: "Scrotal Pathology",
+      category: "Part II - General Surgery",
+      content: "Hydroceles, varicocele, testicular torsion, epididymo-orchitis, testicular tumours"
+    },
+    {
+      title: "Oesophageal Diseases",
+      category: "Part II - General Surgery",
+      content: "Oesophageal perforation, oesophagitis, strictures (benign/malignant), motility disorders (achalasia), oesophageal carcinoma"
+    },
+    {
+      title: "Gastrointestinal Bleeding",
+      category: "Part II - General Surgery",
+      content: "Upper GI bleeding (peptic ulcer, varices), lower GI bleeding (diverticular, colorectal), diagnosis and management protocols"
+    },
+    {
+      title: "Gastric & Duodenal Pathology",
+      category: "Part II - General Surgery",
+      content: "Peptic ulcer disease, perforation, gastric outlet obstruction, gastric neoplasms (benign/malignant), Helicobacter pylori"
+    },
+    {
+      title: "Appendicitis & Small Bowel Disorders",
+      category: "Part II - General Surgery",
+      content: "Acute appendicitis, appendiceal tumours, small bowel obstruction, Meckel's diverticulum"
+    },
+    {
+      title: "Intestinal Obstruction",
+      category: "Part II - General Surgery",
+      content: "Adhesive obstruction, volvulus, intussusception, hernial obstruction, management algorithms"
+    },
+    {
+      title: "Colorectal & Infectious Diseases",
+      category: "Part II - General Surgery",
+      content: "Typhoid perforation, amoebiasis, ascariasis, schistosomiasis, enterocutaneous fistula, inflammatory bowel disease, diverticular disease"
+    },
+    {
+      title: "Colorectal Neoplasms",
+      category: "Part II - General Surgery",
+      content: "Colorectal cancer staging, surgical management, adjuvant therapy, polyps, familial adenomatous polyposis"
+    },
+    {
+      title: "Anorectal Diseases",
+      category: "Part II - General Surgery",
+      content: "Anorectal trauma, infections, perianal abscess, fistula-in-ano, anal fissure, haemorrhoids, rectal prolapse, anal tumours"
+    },
+    {
+      title: "Hepatobiliary Infections & Portal Hypertension",
+      category: "Part II - General Surgery",
+      content: "Liver abscess (pyogenic/amoebic), hydatid cyst, portal hypertension (variceal bleeding, ascites), surgical shunts"
+    },
+    {
+      title: "Biliary Tract Disorders",
+      category: "Part II - General Surgery",
+      content: "Bile duct obstruction, cholelithiasis, cholecystitis (acute/chronic), cholangitis, biliary malignancies"
+    },
+    {
+      title: "Pancreatic Diseases",
+      category: "Part II - General Surgery",
+      content: "Acute pancreatitis, chronic pancreatitis, pancreatic pseudocyst, pancreatic neoplasms"
+    },
+    {
+      title: "Splenic Pathology",
+      category: "Part II - General Surgery",
+      content: "Splenic infections/infestations, hypersplenism, splenic trauma, splenic tumours, splenectomy indications"
+    },
+    {
+      title: "Endocrine Surgery - Thyroid & Parathyroid",
+      category: "Part II - General Surgery",
+      content: "Thyroid nodules, goitre, thyroid cancer, thyroidectomy, hyperparathyroidism, parathyroidectomy"
+    },
+    {
+      title: "Pituitary & Adrenal Surgery",
+      category: "Part II - General Surgery",
+      content: "Pituitary tumours workup, adrenal masses, phaeochromocytoma, Cushing's syndrome surgical management"
+    },
+    {
+      title: "Breast Disease & Surgical Oncology",
+      category: "Part II - General Surgery",
+      content: "Breast cancer staging, surgical options (lumpectomy, mastectomy), sentinel node biopsy, axillary clearance, reconstruction"
+    },
+    {
+      title: "Abdominal Wall Pathologies",
+      category: "Part II - General Surgery",
+      content: "Desmoid tumours, rectus sheath haematoma, ventral hernias, abdominal wall reconstruction"
+    },
+    {
+      title: "Minimally Invasive Surgery",
+      category: "Part II - General Surgery",
+      content: "Laparoscopic cholecystectomy, laparoscopic appendectomy, diagnostic laparoscopy, endoscopic procedures"
+    },
+    {
+      title: "Transplant Surgery Principles",
+      category: "Part II - General Surgery",
+      content: "Renal transplantation overview, organ donation, immunosuppression basics, transplant complications"
+    },
+    {
+      title: "Surgical Critical Care",
+      category: "Part II - General Surgery",
+      content: "ICU management, ventilator support, sepsis management, multi-organ failure, nutrition support"
+    },
+    {
+      title: "Research Methods & Evidence-Based Practice",
+      category: "Part II - General Surgery",
+      content: "Research methodology, surgical audit, evidence-based practice, dissertation requirements, statistical analysis"
+    }
+  ],
+
+  // Part II - Plastic & Reconstructive Surgery
+  part_ii_plastic: [
+    {
+      title: "Wound Healing & Tissue Repair",
+      category: "Part II - Plastic Surgery",
+      content: "Principles of wound healing, primary vs secondary intention, factors affecting healing, chronic wounds, growth factors"
+    },
+    {
+      title: "Tissue Transfer Techniques",
+      category: "Part II - Plastic Surgery",
+      content: "Free skin grafts (split/full thickness), local flaps, pedicled flaps, free flaps with micro-anastomosis, flap physiology"
+    },
+    {
+      title: "Grafts, Implants & Tissue Expansion",
+      category: "Part II - Plastic Surgery",
+      content: "Non-autogenous grafts, implant materials, tissue expansion principles and applications, biomaterials in plastic surgery"
+    },
+    {
+      title: "Aesthetic Surgery Principles",
+      category: "Part II - Plastic Surgery",
+      content: "Patient selection for aesthetic procedures, psychological assessment, informed consent in cosmetic surgery, complications management"
+    },
+    {
+      title: "Scar Management",
+      category: "Part II - Plastic Surgery",
+      content: "Scar cosmesis, hypertrophic scars, keloids, scar revision techniques, silicone therapy, steroid injections, laser treatment"
+    },
+    {
+      title: "Benign Skin Lesions",
+      category: "Part II - Plastic Surgery",
+      content: "Naevi management, congenital melanocytic naevi, vascular malformations, benign tumours excision and reconstruction"
+    },
+    {
+      title: "Laser Therapy in Plastic Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Basic laser principles, laser types, applications in scar treatment, vascular lesions, pigmentation, safety protocols"
+    },
+    {
+      title: "Hand Trauma & Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Tendon injuries (flexor/extensor), neurovascular injuries, bone and joint injuries, hand infections (felon, paronychia), tendon transfers"
+    },
+    {
+      title: "Facial Trauma Management",
+      category: "Part II - Plastic Surgery",
+      content: "Soft tissue facial injuries, nasal fractures, malar fractures, orbital fractures, maxillofacial trauma, mandibular fractures"
+    },
+    {
+      title: "Microsurgery Principles",
+      category: "Part II - Plastic Surgery",
+      content: "Microvascular anastomosis techniques, free flap selection, donor site considerations, flap monitoring, complications"
+    },
+    {
+      title: "Burns: Acute Management",
+      category: "Part II - Plastic Surgery",
+      content: "Major burns resuscitation (Parkland formula), airway management in burns, escharotomy, early excision and grafting"
+    },
+    {
+      title: "Burns: Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Post-burn scarring, contracture release, skin grafting, flap reconstruction, burn scar management, rehabilitation"
+    },
+    {
+      title: "Nutrition & Infection in Burns",
+      category: "Part II - Plastic Surgery",
+      content: "Hypermetabolic response, nutritional support, burn wound infections, antimicrobial dressings, topical agents"
+    },
+    {
+      title: "Cleft Lip & Palate",
+      category: "Part II - Plastic Surgery",
+      content: "Embryology, surgical timing, cleft lip repair (Millard technique), cleft palate repair, speech outcomes, secondary procedures"
+    },
+    {
+      title: "Craniofacial Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Craniosynostosis, craniofacial clefts, distraction osteogenesis, multidisciplinary team approach"
+    },
+    {
+      title: "Hypospadias Repair",
+      category: "Part II - Plastic Surgery",
+      content: "Hypospadias classification, surgical techniques (TIP, onlay, tubularised), complications (fistula, stricture), staged repairs"
+    },
+    {
+      title: "Congenital Hand Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Polydactyly, syndactyly, thumb hypoplasia, radial club hand, congenital constriction bands"
+    },
+    {
+      title: "Malignant Skin Tumours",
+      category: "Part II - Plastic Surgery",
+      content: "Melanoma staging and management, sentinel node biopsy, regional lymph node dissection, squamous cell carcinoma, basal cell carcinoma"
+    },
+    {
+      title: "Soft Tissue Sarcomas",
+      category: "Part II - Plastic Surgery",
+      content: "Sarcoma classification, biopsy techniques, wide local excision, reconstruction options, adjuvant therapy, prognosis"
+    },
+    {
+      title: "Head & Neck Tumours",
+      category: "Part II - Plastic Surgery",
+      content: "Floor of mouth tumours, palate/maxillary tumours, treatment principles, multidisciplinary management"
+    },
+    {
+      title: "Neck Dissection",
+      category: "Part II - Plastic Surgery",
+      content: "Functional neck dissection, radical neck dissection, modified radical, selective dissection, complications"
+    },
+    {
+      title: "Mandibular Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Fibula free flap, scapula flap, reconstruction plates, dental rehabilitation, osseointegrated implants"
+    },
+    {
+      title: "Facial Nerve Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Facial nerve anatomy, nerve repair techniques, nerve grafting, muscle transfers, facial reanimation"
+    },
+    {
+      title: "Parotidectomy & Facial Prosthetics",
+      category: "Part II - Plastic Surgery",
+      content: "Parotid tumour surgery, facial nerve preservation, prosthetic reconstruction, maxillofacial prosthetics"
+    },
+    {
+      title: "Hand Contractures & Nerve Compression",
+      category: "Part II - Plastic Surgery",
+      content: "Dupuytren's contracture, carpal tunnel syndrome, cubital tunnel syndrome, nerve decompression, rehabilitation"
+    },
+    {
+      title: "Facial Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Facial defect reconstruction, local flaps (nasolabial, forehead), regional flaps, free flaps for facial defects"
+    },
+    {
+      title: "Facial Aesthetic Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Facelifts (SMAS, deep plane), brow lift, blepharoplasty, facial fat grafting, botulinum toxin, fillers"
+    },
+    {
+      title: "Rhinoplasty",
+      category: "Part II - Plastic Surgery",
+      content: "Reconstructive rhinoplasty, nasal anatomy, septoplasty, dorsal hump reduction, tip refinement, alar base reduction"
+    },
+    {
+      title: "Eyelid & Ear Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Eyelid reconstruction (upper/lower), ptosis correction, ear reconstruction (microtia), prominent ear correction"
+    },
+    {
+      title: "Breast Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Immediate vs delayed reconstruction, implant-based, autologous (TRAM, DIEP, latissimus dorsi), nipple reconstruction"
+    },
+    {
+      title: "Aesthetic Breast Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Breast augmentation, mastopexy, breast reduction, gynecomastia surgery, complications management"
+    },
+    {
+      title: "Trunk & Limb Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Chest wall reconstruction (pectus excavatum), abdominal wall reconstruction, abdominoplasty, liposuction principles"
+    },
+    {
+      title: "Lower Limb Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Lower limb trauma coverage, flap options (gastrocnemius, soleus, free flaps), diabetic foot reconstruction, pressure sores"
+    },
+    {
+      title: "Lipoatrophy & Body Contouring",
+      category: "Part II - Plastic Surgery",
+      content: "Fat grafting techniques, lipoatrophy treatment, post-bariatric body contouring, panniculectomy"
+    },
+    {
+      title: "Genital Reconstruction",
+      category: "Part II - Plastic Surgery",
+      content: "Hypospadias/epispadias repair, penile reconstruction, scrotal reconstruction, perineal reconstruction"
+    },
+    {
+      title: "Gender Reassignment Surgery",
+      category: "Part II - Plastic Surgery",
+      content: "Vaginal reconstruction (vaginoplasty), phalloplasty principles, chest surgery (masculinization/feminization), multidisciplinary care"
+    }
+  ]
+};
+
 // Enhanced interfaces for the new MCQ system
 export interface ClinicalTopic {
   id: string;
@@ -871,7 +1290,7 @@ Apply these algorithms systematically in your clinical practice.`
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('UNTH Plastic Surgery - Personalized Study Materials', pageWidth / 2, 12, { align: 'center' });
+    doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT - Personalized Study Materials', pageWidth / 2, 12, { align: 'center' });
     doc.setFontSize(10);
     doc.text(`Generated: ${material.generatedAt.toLocaleDateString()}`, pageWidth / 2, 19, { align: 'center' });
 
@@ -918,7 +1337,7 @@ Apply these algorithms systematically in your clinical practice.`
       doc.rect(0, pageHeight - 10, pageWidth, 10, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      doc.text('UNTH Plastic Surgery Department - CME Program', pageWidth / 2, pageHeight - 5, { align: 'center' });
+      doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT - CME Program', pageWidth / 2, pageHeight - 5, { align: 'center' });
       doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
     }
 
@@ -974,6 +1393,221 @@ Apply these algorithms systematically in your clinical practice.`
       notification.sent = true;
       notification.sentAt = new Date();
       await db.notification_schedules.put(notification);
+    }
+  }
+
+  /**
+   * Initialize WACS Curriculum Topics
+   * Populates database with comprehensive WACS topics for automated MCQ generation
+   */
+  async initializeWACSTopics(): Promise<void> {
+    console.log('Initializing WACS Curriculum Topics...');
+    
+    // Check if topics already exist
+    const existingTopics = await db.clinical_topics.count();
+    if (existingTopics > 0) {
+      console.log(`${existingTopics} topics already exist. Skipping initialization.`);
+      return;
+    }
+
+    const allTopics = [
+      ...WACS_CURRICULUM_TOPICS.part_i_principles.map(t => ({
+        ...t,
+        targetLevels: ['house_officer', 'junior_resident', 'senior_resident'] as ('house_officer' | 'junior_resident' | 'senior_resident')[]
+      })),
+      ...WACS_CURRICULUM_TOPICS.part_i_specialty.map(t => ({
+        ...t,
+        targetLevels: ['house_officer', 'junior_resident', 'senior_resident'] as ('house_officer' | 'junior_resident' | 'senior_resident')[]
+      })),
+      ...WACS_CURRICULUM_TOPICS.part_ii_general.map(t => ({
+        ...t,
+        targetLevels: ['junior_resident', 'senior_resident'] as ('house_officer' | 'junior_resident' | 'senior_resident')[]
+      })),
+      ...WACS_CURRICULUM_TOPICS.part_ii_plastic.map(t => ({
+        ...t,
+        targetLevels: ['junior_resident', 'senior_resident'] as ('house_officer' | 'junior_resident' | 'senior_resident')[]
+      }))
+    ];
+
+    for (const topicData of allTopics) {
+      await this.uploadClinicalTopic(
+        topicData.title,
+        topicData.category,
+        topicData.content,
+        topicData.targetLevels,
+        'system',
+        []
+      );
+    }
+
+    console.log(`✅ Initialized ${allTopics.length} WACS curriculum topics`);
+  }
+
+  /**
+   * Start Weekly Test Notification Scheduler
+   * Sends push notifications every Tuesday at 9:30 AM
+   */
+  startWeeklyTestNotificationScheduler(): void {
+    console.log('📅 Starting Weekly MCQ Test Notification Scheduler...');
+
+    // Check every hour if it's Tuesday 9:30 AM
+    setInterval(async () => {
+      await this.checkAndSendTestReminders();
+    }, 60 * 60 * 1000); // Check every hour
+
+    // Also check immediately on startup
+    this.checkAndSendTestReminders();
+
+    console.log('✅ Weekly test notification scheduler started');
+  }
+
+  /**
+   * Check if it's Tuesday 9:30 AM and send test reminders
+   */
+  private async checkAndSendTestReminders(): Promise<void> {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 2 = Tuesday
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    // Check if it's Tuesday (day 2) and between 9:30-10:30 AM
+    if (day === 2 && hour === 9 && minute >= 30) {
+      console.log('📚 It\'s Tuesday 9:30 AM - Sending MCQ test reminders...');
+      await this.sendWeeklyTestNotifications();
+    }
+  }
+
+  /**
+   * Send push notifications for weekly MCQ test
+   */
+  private async sendWeeklyTestNotifications(): Promise<void> {
+    try {
+      // Get upcoming tests scheduled for today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const upcomingTests = await db.mcq_test_schedules
+        .where('scheduledFor')
+        .between(today, tomorrow)
+        .and(t => t.status === 'scheduled')
+        .toArray();
+
+      if (upcomingTests.length === 0) {
+        console.log('No tests scheduled for today');
+        return;
+      }
+
+      for (const test of upcomingTests) {
+        const topicTitle = await this.getTopicTitle(test.topicId);
+        
+        const notification = {
+          title: '📝 Weekly MCQ Assessment Ready!',
+          body: `${topicTitle} - 25 questions, 10 minutes. Take your test now!`,
+          icon: '/logo192.png',
+          badge: '/badge-72x72.png',
+          data: {
+            type: 'mcq_test_reminder',
+            test_id: test.id,
+            topic_id: test.topicId,
+            url: '/education',
+            scheduled_for: test.scheduledFor
+          },
+          actions: [
+            {
+              action: 'take_test',
+              title: 'Take Test Now'
+            },
+            {
+              action: 'remind_later',
+              title: 'Remind Me Later'
+            }
+          ],
+          requireInteraction: true,
+          vibrate: [200, 100, 200, 100, 200],
+          tag: 'mcq-test-reminder',
+        };
+
+        // Send via Service Worker push notification
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+              const registration = await navigator.serviceWorker.ready;
+              await registration.showNotification(notification.title, notification);
+              console.log(`✅ Test reminder sent: ${topicTitle}`);
+              
+              // Mark notification as sent
+              test.notificationSent = true;
+              await db.mcq_test_schedules.put(test);
+            }
+          } catch (error) {
+            console.error('Error sending push notification:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in sendWeeklyTestNotifications:', error);
+    }
+  }
+
+  /**
+   * Get next Tuesday 9:30 AM
+   */
+  getNextTestDate(): Date {
+    const now = new Date();
+    const currentDay = now.getDay();
+    
+    // Calculate days until next Tuesday (2)
+    let daysUntilTuesday = 2 - currentDay;
+    if (daysUntilTuesday <= 0 || (daysUntilTuesday === 0 && now.getHours() >= 9)) {
+      daysUntilTuesday += 7; // Next week's Tuesday
+    }
+    
+    const nextTuesday = new Date(now);
+    nextTuesday.setDate(now.getDate() + daysUntilTuesday);
+    nextTuesday.setHours(9, 30, 0, 0); // 9:30 AM
+    
+    return nextTuesday;
+  }
+
+  /**
+   * Schedule next week's test automatically
+   */
+  async autoScheduleNextWeekTest(): Promise<void> {
+    try {
+      // Get a random topic that hasn't been used recently
+      const allTopics = await db.clinical_topics.where('status').equals('active').toArray();
+      
+      if (allTopics.length === 0) {
+        console.log('No active topics available for scheduling');
+        return;
+      }
+
+      // Get recently used topics (last 4 weeks)
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      
+      const recentTests = await db.mcq_test_schedules
+        .where('scheduledFor')
+        .above(fourWeeksAgo)
+        .toArray();
+      
+      const recentTopicIds = recentTests.map(t => t.topicId);
+      
+      // Filter out recently used topics
+      const availableTopics = allTopics.filter(t => !recentTopicIds.includes(t.id));
+      const selectedTopic = availableTopics.length > 0 
+        ? availableTopics[Math.floor(Math.random() * availableTopics.length)]
+        : allTopics[Math.floor(Math.random() * allTopics.length)];
+
+      // Schedule for next Tuesday 9:30 AM
+      await this.scheduleTest(selectedTopic);
+      
+      console.log(`✅ Auto-scheduled test for next Tuesday: ${selectedTopic.title}`);
+    } catch (error) {
+      console.error('Error auto-scheduling test:', error);
     }
   }
 

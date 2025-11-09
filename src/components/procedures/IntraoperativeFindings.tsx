@@ -776,7 +776,7 @@ export const IntraoperativeFindingsForm: React.FC<IntraoperativeFindingsFormProp
       '📍 Long-term Follow-up: As scheduled by surgeon',
       '',
       '📞 Contact Information:',
-      '   • UNTH Plastic Surgery Clinic: [Phone Number]',
+      '   • PLASTIC AND RECONSTRUCTIVE SURGERY UNIT Clinic: [Phone Number]',
       '   • Emergency: [Emergency Number]',
       '   • After-hours: [On-call Number]'
     ];
@@ -797,7 +797,7 @@ export const IntraoperativeFindingsForm: React.FC<IntraoperativeFindingsFormProp
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.text(`AI-Generated Postoperative Care Plan | Generated: ${new Date().toLocaleString('en-NG')}`, pageWidth / 2, pageHeight - 9, { align: 'center' });
-    doc.text('UNTH Plastic Surgery Department | This is a comprehensive care guide - individualize based on patient needs', pageWidth / 2, pageHeight - 4, { align: 'center' });
+    doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT | This is a comprehensive care guide - individualize based on patient needs', pageWidth / 2, pageHeight - 4, { align: 'center' });
 
     // Save PDF
     const fileName = `UNTH_PostopNote_${procedureId}_${new Date().toISOString().split('T')[0]}.pdf`;

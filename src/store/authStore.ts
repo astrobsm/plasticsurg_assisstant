@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { userManagementService } from '../services/userManagementService';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'consultant' | 'registrar' | 'intern' | 'nursing' | 'lab' | 'pharmacy';
+  role: 'super_admin' | 'consultant' | 'senior_registrar' | 'junior_registrar' | 'medical_officer' | 'house_officer' | 'nursing' | 'lab' | 'pharmacy';
   privileges: string[];
 }
 
@@ -15,7 +16,7 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,20 +28,32 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email: string, password: string) => {
         try {
-          // TODO: Replace with actual API call
-          const mockUser: User = {
-            id: '1',
-            name: 'Dr. Sarah Johnson',
-            email,
-            role: password === 'consultant' ? 'consultant' : 'intern',
-            privileges: password === 'consultant' 
-              ? ['view_all', 'approve_plans', 'sign_checklists', 'supervise'] 
-              : ['view_assigned', 'create_notes', 'request_labs']
+          // Authenticate user via userManagementService
+          const authenticatedUser = await userManagementService.authenticateUser(email, password);
+          
+          if (!authenticatedUser) {
+            throw new Error('Invalid email or password');
+          }
+
+          if (!authenticatedUser.is_active) {
+            throw new Error('Your account has been deactivated. Please contact the administrator.');
+          }
+
+          const user: User = {
+            id: authenticatedUser.id!.toString(),
+            name: authenticatedUser.name,
+            email: authenticatedUser.email,
+            role: authenticatedUser.role as any,
+            privileges: authenticatedUser.privileges
           };
 
-          set({ user: mockUser, token: 'mock-jwt-token', loading: false });
+          // Generate a simple token (in production, use JWT from backend)
+          const token = btoa(JSON.stringify({ userId: user.id, timestamp: Date.now() }));
+
+          set({ user, token, loading: false });
         } catch (error) {
-          throw new Error('Login failed');
+          set({ loading: false });
+          throw error;
         }
       },
 
@@ -48,13 +61,22 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, token: null, loading: false });
       },
 
-      initializeAuth: () => {
-        // Check if we have stored auth data
-        const state = get();
-        if (state.token) {
-          // TODO: Validate token with backend
-          set({ loading: false });
-        } else {
+      initializeAuth: async () => {
+        try {
+          // Initialize admin account if it doesn't exist
+          await userManagementService.initializeAdminAccount();
+          
+          // Check if we have stored auth data
+          const state = get();
+          if (state.token && state.user) {
+            // Token exists, validate it's still valid
+            // In production, this would validate with backend
+            set({ loading: false });
+          } else {
+            set({ loading: false });
+          }
+        } catch (error) {
+          console.error('Failed to initialize auth:', error);
           set({ loading: false });
         }
       },

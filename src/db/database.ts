@@ -4,6 +4,8 @@ import { WardRound, ClinicSession, SurgeryBooking } from '../services/scheduling
 import { LabInvestigation, LabResult, GFRCalculation } from '../services/labService';
 import { BaseRiskAssessment, DVTRiskAssessment, PressureSoreRiskAssessment, NutritionalRiskAssessment } from '../services/riskAssessmentService';
 import { ClinicalTopic, GeneratedMCQ, MCQTestSchedule, MCQTestSession, StudyMaterial, NotificationSchedule } from '../services/mcqGenerationService';
+import { EducationalTopic, WeeklyContent, TopicSchedule, UserProgress } from '../services/topicManagementService';
+import { PendingUser, ApprovedUser } from '../services/userManagementService';
 
 // Define the data structures for offline storage
 export interface Patient {
@@ -28,6 +30,9 @@ export interface TreatmentPlan {
   id?: number;
   serverId?: string;
   patient_id: number;
+  patient_name?: string; // For enhanced treatment planning
+  hospital_number?: string; // For enhanced treatment planning
+  admission_date?: Date; // For enhanced treatment planning
   title: string;
   diagnosis: string;
   status: 'draft' | 'active' | 'completed' | 'archived';
@@ -35,6 +40,13 @@ export interface TreatmentPlan {
   planned_end_date?: Date;
   description?: string;
   created_by: string; // user ID
+  // Enhanced treatment planning fields
+  reviews?: any[]; // TreatmentPlanReview[]
+  lab_works?: any[]; // LabWork[]
+  procedures?: any[]; // PlannedProcedure[]
+  medications?: any[]; // MedicationAdministration[]
+  discharge_timeline?: any; // DischargeTimeline
+  notes?: string;
   created_at: Date;
   updated_at: Date;
   synced: boolean;
@@ -96,6 +108,22 @@ export class PlasticSurgeonDB extends Dexie {
   mcq_test_sessions!: Table<MCQTestSession>;
   study_materials!: Table<StudyMaterial>;
   notification_schedules!: Table<NotificationSchedule>;
+  educational_topics!: Table<EducationalTopic>;
+  weekly_contents!: Table<WeeklyContent>;
+  topic_schedules!: Table<TopicSchedule>;
+  user_progress!: Table<UserProgress>;
+  users!: Table<any>; // For user management
+  pending_users!: Table<PendingUser>;
+  approved_users!: Table<ApprovedUser>;
+  patient_summaries!: Table<any>; // For AI-powered patient summaries
+  paperwork_documents!: Table<any>; // For AI-generated paperwork
+  mdt_patient_teams!: Table<any>; // For MDT patient teams
+  mdt_meetings!: Table<any>; // For MDT meetings
+  mdt_contact_logs!: Table<any>; // For MDT contact logs
+  admissions!: Table<any>; // For patient admissions
+  discharges!: Table<any>; // For patient discharges
+  cme_articles!: Table<any>; // For CME WACS articles
+  cme_reading_progress!: Table<any>; // For CME reading progress tracking
 
   constructor() {
     super('PlasticSurgeonDB');
@@ -181,6 +209,231 @@ export class PlasticSurgeonDB extends Dexie {
       mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
       study_materials: '++id, sessionId, userId, generatedAt',
       notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type'
+    });
+
+    // Version 5: Add Topic Management System tables
+    this.version(5).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at'
+    });
+
+    // Version 6: Add User Management System tables
+    this.version(6).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at',
+      pending_users: '++id, email, status, requested_at, reviewed_at',
+      approved_users: '++id, email, role, is_active, created_at, last_login'
+    });
+
+    // Version 7: Add Enhanced Treatment Planning, Patient Summaries, and Paperwork tables
+    this.version(7).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at',
+      pending_users: '++id, email, status, requested_at, reviewed_at',
+      approved_users: '++id, email, role, is_active, created_at, last_login',
+      patient_summaries: '++id, patient_id, admission_date, generated_at, generated_by',
+      paperwork_documents: '++id, patient_id, type, status, created_at, created_by'
+    });
+
+    // Version 8: Add MDT (Multidisciplinary Team) tables
+    this.version(8).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at',
+      pending_users: '++id, email, status, requested_at, reviewed_at',
+      approved_users: '++id, email, role, is_active, created_at, last_login',
+      patient_summaries: '++id, patient_id, admission_date, generated_at, generated_by',
+      paperwork_documents: '++id, patient_id, type, status, created_at, created_by',
+      mdt_patient_teams: '++id, patient_id, hospital_number, is_active, created_at',
+      mdt_meetings: '++id, patient_id, meeting_date, status, created_at, created_by',
+      mdt_contact_logs: '++id, patient_id, specialty_id, contact_date, follow_up_required, created_at'
+    });
+
+    // Version 9: Add Admissions and Discharges tables
+    this.version(9).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at',
+      pending_users: '++id, email, status, requested_at, reviewed_at',
+      approved_users: '++id, email, role, is_active, created_at, last_login',
+      patient_summaries: '++id, patient_id, admission_date, generated_at, generated_by',
+      paperwork_documents: '++id, patient_id, type, status, created_at, created_by',
+      mdt_patient_teams: '++id, patient_id, hospital_number, is_active, created_at',
+      mdt_meetings: '++id, patient_id, meeting_date, status, created_at, created_by',
+      mdt_contact_logs: '++id, patient_id, specialty_id, contact_date, follow_up_required, created_at',
+      admissions: '++id, patient_id, hospital_number, admission_date, ward_location, route_of_admission, status, created_at',
+      discharges: '++id, admission_id, patient_id, hospital_number, discharge_date, discharge_status, created_at'
+    });
+
+    // Version 10: Add CME WACS Articles and Reading Progress tables
+    this.version(10).stores({
+      patients: '++id, serverId, hospital_number, first_name, last_name, created_at, synced, deleted',
+      treatment_plans: '++id, serverId, patient_id, title, status, created_at, synced, deleted',
+      plan_steps: '++id, serverId, plan_id, step_number, status, due_date, created_at, synced, deleted',
+      sync_queue: '++id, action, table, local_id, created_at, retries',
+      cmeTopics: '++id, title, category, weekOf, estimatedDuration',
+      testSessions: '++id, userId, topicId, startedAt, completedAt',
+      cmeProgress: '++id, [userId+topicId], userId, topicId, completed, lastAttempt',
+      cmeCertificates: '++id, userId, topicId, issuedAt, validUntil',
+      ward_rounds: '++id, date, ward_name, consultant, status, created_at',
+      clinic_sessions: '++id, date, clinic_type, consultant, status, created_at',
+      surgery_bookings: '++id, date, theatre_number, primary_surgeon, patient_id, status, created_at',
+      lab_investigations: '++id, patient_id, request_date, requested_by, status, urgency, created_at',
+      lab_results: '++id, investigation_id, patient_id, test_id, result_date, abnormal_flag, created_at',
+      gfr_calculations: '++id, patient_id, calculation_date, gfr_value, ckd_stage, created_at',
+      dvt_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      pressure_sore_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      nutritional_assessments: '++id, patient_id, assessment_date, assessment_type, risk_level, score, status, assessed_by, created_at',
+      clinical_topics: '++id, title, category, uploadedAt, status, uploadedBy',
+      generated_mcqs: '++id, topicId, targetLevel, difficulty, category, generatedAt',
+      mcq_test_schedules: '++id, topicId, scheduledFor, status, notificationSent',
+      mcq_test_sessions: '++id, userId, scheduleId, topicId, startedAt, completedAt, userLevel',
+      study_materials: '++id, sessionId, userId, generatedAt',
+      notification_schedules: '++id, userId, scheduleId, scheduledFor, sent, sentAt, type',
+      educational_topics: '++id, title, category, uploadedAt, status, uploadedBy, weeklyContentGenerated',
+      weekly_contents: '++id, topicId, [topicId+weekNumber+year], weekNumber, year, publishedAt, generatedAt',
+      topic_schedules: '++id, topicId, scheduledWeek, status, notificationsSent, createdAt',
+      user_progress: '++id, [userId+topicId], userId, topicId, weeklyContentId, readAt, mcqTestTaken',
+      users: '++id, role, created_at',
+      pending_users: '++id, email, status, requested_at, reviewed_at',
+      approved_users: '++id, email, role, is_active, created_at, last_login',
+      patient_summaries: '++id, patient_id, admission_date, generated_at, generated_by',
+      paperwork_documents: '++id, patient_id, type, status, created_at, created_by',
+      mdt_patient_teams: '++id, patient_id, hospital_number, is_active, created_at',
+      mdt_meetings: '++id, patient_id, meeting_date, status, created_at, created_by',
+      mdt_contact_logs: '++id, patient_id, specialty_id, contact_date, follow_up_required, created_at',
+      admissions: '++id, patient_id, hospital_number, admission_date, ward_location, route_of_admission, status, created_at',
+      discharges: '++id, admission_id, patient_id, hospital_number, discharge_date, discharge_status, created_at',
+      cme_articles: '++id, topic, category, subcategory, published_date, difficulty_level, view_count, like_count, created_at',
+      cme_reading_progress: '++id, [user_id+article_id], user_id, article_id, started_at, completed_at, bookmarked, created_at'
     });
 
     // Add hooks to automatically track changes

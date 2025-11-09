@@ -39,11 +39,12 @@ import {
   Wifi,
   WifiOff
 } from 'lucide-react';
-import { Layout } from '../components/Layout';
+import Layout from '../components/Layout';
+import { UserApprovalManager } from '../components/UserApprovalManager';
 import { db } from '../db/database';
 import { resetDatabase } from '../utils/dbReset';
 
-type AdminTab = 'dashboard' | 'users' | 'system' | 'database' | 'security' | 'analytics' | 'settings';
+type AdminTab = 'dashboard' | 'user-approvals' | 'users' | 'system' | 'database' | 'security' | 'analytics' | 'settings';
 
 interface User {
   id: string;
@@ -355,6 +356,7 @@ export default function Admin() {
       {/* Tab Navigation */}
       <div className="flex space-x-2 mb-6 overflow-x-auto">
         <TabButton tab="dashboard" label="Dashboard" icon={BarChart3} />
+        <TabButton tab="user-approvals" label="User Approvals" icon={UserCheck} />
         <TabButton tab="users" label="User Management" icon={Users} />
         <TabButton tab="system" label="System Health" icon={Activity} />
         <TabButton tab="database" label="Database" icon={Database} />
@@ -436,6 +438,11 @@ export default function Admin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* User Approvals Tab */}
+      {activeTab === 'user-approvals' && (
+        <UserApprovalManager />
       )}
 
       {/* User Management Tab */}

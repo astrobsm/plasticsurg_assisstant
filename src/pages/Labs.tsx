@@ -27,6 +27,7 @@ import {
   GFRTrend,
   PatientDemographics
 } from '../services/labService';
+import { db } from '../db/database';
 
 type LabTab = 'investigations' | 'results' | 'upload' | 'trends' | 'requests' | 'gfr';
 
@@ -840,6 +841,7 @@ const RequestSection = ({ onRefresh }: any) => {
   const [formData, setFormData] = useState({
     patient_id: '',
     patient_name: '',
+    hospital_number: '',
     requested_by: '',
     urgency: 'routine',
     clinical_indication: '',
@@ -847,6 +849,40 @@ const RequestSection = ({ onRefresh }: any) => {
   });
   const [selectedTests, setSelectedTests] = useState<LabTest[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('hematology');
+  const [patients, setPatients] = useState<any[]>([]);
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      const allPatients = await db.patients.toArray();
+      setPatients(allPatients);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
+
+  const filteredPatients = patients.filter(p => {
+    const searchLower = patientSearchQuery.toLowerCase();
+    const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+    const hospitalNum = p.hospital_number?.toLowerCase() || '';
+    return fullName.includes(searchLower) || hospitalNum.includes(searchLower);
+  }).slice(0, 10); // Limit to 10 results
+
+  const selectPatient = (patient: any) => {
+    setFormData({
+      ...formData,
+      patient_id: patient.id?.toString() || '',
+      patient_name: `${patient.first_name} ${patient.last_name}`,
+      hospital_number: patient.hospital_number || ''
+    });
+    setPatientSearchQuery(`${patient.first_name} ${patient.last_name} (${patient.hospital_number})`);
+    setShowPatientDropdown(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -863,20 +899,25 @@ const RequestSection = ({ onRefresh }: any) => {
       setFormData({
         patient_id: '',
         patient_name: '',
+        hospital_number: '',
         requested_by: '',
         urgency: 'routine',
         clinical_indication: '',
         special_instructions: ''
       });
       setSelectedTests([]);
+      setPatientSearchQuery('');
       onRefresh();
     } catch (error) {
       console.error('Error creating lab request:', error);
     }
   };
 
-  const addTest = (test: LabTest) => {
-    if (!selectedTests.find(t => t.id === test.id)) {
+  const toggleTest = (test: LabTest) => {
+    const exists = selectedTests.find(t => t.id === test.id);
+    if (exists) {
+      setSelectedTests(selectedTests.filter(t => t.id !== test.id));
+    } else {
       setSelectedTests([...selectedTests, test]);
     }
   };
@@ -886,6 +927,7 @@ const RequestSection = ({ onRefresh }: any) => {
   };
 
   const labCategories = labService.getLabCategories();
+  const availableTests = labService.getCommonTests(selectedCategory);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -896,16 +938,55 @@ const RequestSection = ({ onRefresh }: any) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
-            <input
-              type="text"
-              value={formData.patient_name}
-              onChange={(e) => setFormData({ ...formData, patient_name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            />
+          {/* Patient Search Dropdown */}
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Patient *
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={patientSearchQuery}
+                onChange={(e) => {
+                  setPatientSearchQuery(e.target.value);
+                  setShowPatientDropdown(true);
+                }}
+                onFocus={() => setShowPatientDropdown(true)}
+                placeholder="Search by name or hospital number..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+              <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+            </div>
+
+            {/* Patient Dropdown */}
+            {showPatientDropdown && patientSearchQuery && filteredPatients.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {filteredPatients.map((patient) => (
+                  <button
+                    key={patient.id}
+                    type="button"
+                    onClick={() => selectPatient(patient)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="font-medium text-gray-900">
+                      {patient.first_name} {patient.last_name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Hospital No: {patient.hospital_number}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showPatientDropdown && patientSearchQuery && filteredPatients.length === 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3">
+                <p className="text-sm text-gray-600">No patients found</p>
+              </div>
+            )}
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Requested By</label>
             <input
@@ -953,31 +1034,56 @@ const RequestSection = ({ onRefresh }: any) => {
           />
         </div>
 
-        {/* Test Selection */}
+        {/* Checkbox Test Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Available Tests</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-            {labService.getCommonTests(selectedCategory).map(test => (
-              <button
-                key={test.id}
-                type="button"
-                onClick={() => addTest(test)}
-                className="p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-900">{test.test_name}</div>
-                <div className="text-sm text-gray-600">{test.test_code}</div>
-                {test.fasting_required && (
-                  <div className="text-xs text-orange-600">Fasting required</div>
-                )}
-              </button>
-            ))}
-          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Select Tests from {labCategories.find(c => c.value === selectedCategory)?.label || 'Category'} 
+            <span className="text-gray-500 ml-2">({availableTests.length} tests available)</span>
+          </label>
+          
+          {availableTests.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              {availableTests.map(test => (
+                <label
+                  key={test.id}
+                  className={`flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    selectedTests.find(t => t.id === test.id)
+                      ? 'bg-green-50 border-green-500 shadow-sm'
+                      : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-sm'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTests.some(t => t.id === test.id)}
+                    onChange={() => toggleTest(test)}
+                    className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 text-sm">{test.test_name}</div>
+                    <div className="text-xs text-gray-600">{test.test_code}</div>
+                    {test.fasting_required && (
+                      <div className="flex items-center space-x-1 mt-1">
+                        <AlertTriangle className="h-3 w-3 text-orange-600" />
+                        <span className="text-xs text-orange-600">Fasting required</span>
+                      </div>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+              <p className="text-sm text-gray-600">No tests available in this category</p>
+            </div>
+          )}
         </div>
 
-        {/* Selected Tests */}
+        {/* Selected Tests Summary */}
         {selectedTests.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Selected Tests</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selected Tests ({selectedTests.length})
+            </label>
             <div className="flex flex-wrap gap-2">
               {selectedTests.map(test => (
                 <span
@@ -1016,12 +1122,14 @@ const RequestSection = ({ onRefresh }: any) => {
               setFormData({
                 patient_id: '',
                 patient_name: '',
+                hospital_number: '',
                 requested_by: '',
                 urgency: 'routine',
                 clinical_indication: '',
                 special_instructions: ''
               });
               setSelectedTests([]);
+              setPatientSearchQuery('');
             }}
             className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
           >
@@ -1029,7 +1137,7 @@ const RequestSection = ({ onRefresh }: any) => {
           </button>
           <button
             type="submit"
-            disabled={selectedTests.length === 0}
+            disabled={selectedTests.length === 0 || !formData.patient_id}
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             Submit Request

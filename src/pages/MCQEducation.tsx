@@ -19,14 +19,19 @@ import {
   ArrowLeft,
   FileText,
   BarChart,
-  Lightbulb
+  Lightbulb,
+  Heart,
+  Bookmark,
+  Filter
 } from 'lucide-react';
 import { mcqGenerationService, ClinicalTopic, MCQTestSchedule, MCQTestSession, StudyMaterial } from '../services/mcqGenerationService';
+import { cmeWACSService, CMEArticle, WACSCategory } from '../services/cmeWACSService';
 import { useAuthStore } from '../store/authStore';
+import CMEArticleViewer from '../components/CMEArticleViewer';
 
 const MCQEducation: React.FC = () => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'topics' | 'tests' | 'active-test' | 'results' | 'history'>('topics');
+  const [activeTab, setActiveTab] = useState<'topics' | 'tests' | 'active-test' | 'results' | 'history' | 'cme-articles'>('topics');
   
   // Topics management (Admin)
   const [topics, setTopics] = useState<ClinicalTopic[]>([]);
@@ -49,6 +54,13 @@ const MCQEducation: React.FC = () => {
   // Results and history
   const [testHistory, setTestHistory] = useState<MCQTestSession[]>([]);
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterial | null>(null);
+
+  // CME Articles
+  const [cmeArticles, setCmeArticles] = useState<CMEArticle[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<CMEArticle[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<WACSCategory | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'completed'>('all');
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,15 +87,30 @@ const MCQEducation: React.FC = () => {
     };
   }, [currentSession, testCompleted]);
 
+  // Filter CME articles when filters change
+  useEffect(() => {
+    let filtered = cmeArticles;
+
+    // Filter by category
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(article => article.category === categoryFilter);
+    }
+
+    setFilteredArticles(filtered);
+  }, [categoryFilter, statusFilter, cmeArticles]);
+
   const loadData = async () => {
     try {
-      const [upcomingData, historyData] = await Promise.all([
+      const [upcomingData, historyData, articlesData] = await Promise.all([
         mcqGenerationService.getUpcomingTests(userLevel),
-        mcqGenerationService.getUserTestHistory(user?.id || 'demo-user')
+        mcqGenerationService.getUserTestHistory(user?.id || 'demo-user'),
+        cmeWACSService.getAllArticles()
       ]);
 
       setUpcomingTests(upcomingData);
       setTestHistory(historyData);
+      setCmeArticles(articlesData);
+      setFilteredArticles(articlesData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -805,6 +832,131 @@ const MCQEducation: React.FC = () => {
     </div>
   );
 
+  const renderCMEArticlesTab = () => {
+    const categoryLabels = {
+      part_i_principles: 'Part I - Principles',
+      part_i_specialty: 'Part I - Specialty Intro',
+      part_ii_general: 'Part II - General Surgery',
+      part_ii_plastic: 'Part II - Plastic Surgery'
+    };
+
+    const difficultyColors = {
+      beginner: 'bg-green-100 text-green-800',
+      intermediate: 'bg-yellow-100 text-yellow-800',
+      advanced: 'bg-red-100 text-red-800'
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-green-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as WACSCategory | 'all')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="all">All Categories</option>
+                <option value="part_i_principles">Part I - Principles</option>
+                <option value="part_i_specialty">Part I - Specialty Intro</option>
+                <option value="part_ii_general">Part II - General Surgery</option>
+                <option value="part_ii_plastic">Part II - Plastic Surgery</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reading Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'unread' | 'completed')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="all">All Articles</option>
+                <option value="unread">Unread</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Articles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredArticles.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No articles found</p>
+            </div>
+          ) : (
+            filteredArticles.map((article) => (
+              <div
+                key={article.id}
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+              >
+                {/* Article Header */}
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${difficultyColors[article.difficulty_level]}`}>
+                      {article.difficulty_level.charAt(0).toUpperCase() + article.difficulty_level.slice(1)}
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      <Heart className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{article.like_count || 0}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                    {categoryLabels[article.category]}
+                  </span>
+                </div>
+
+                {/* Article Body */}
+                <div className="p-4">
+                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                    {article.summary}
+                  </p>
+
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{article.reading_time_minutes} min read</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>{new Date(article.published_date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedArticle(article.id)}
+                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Read Article</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
@@ -828,6 +980,16 @@ const MCQEducation: React.FC = () => {
           }`}
         >
           📚 Topics & Tests
+        </button>
+        <button
+          onClick={() => setActiveTab('cme-articles')}
+          className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
+            activeTab === 'cme-articles'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          📖 CME Articles
         </button>
         <button
           onClick={() => setActiveTab('active-test')}
@@ -865,9 +1027,19 @@ const MCQEducation: React.FC = () => {
 
       {/* Tab Content */}
       {activeTab === 'topics' && renderTopicsTab()}
+      {activeTab === 'cme-articles' && renderCMEArticlesTab()}
       {activeTab === 'active-test' && renderActiveTestTab()}
       {activeTab === 'results' && renderResultsTab()}
       {activeTab === 'history' && renderHistoryTab()}
+
+      {/* CME Article Viewer Modal */}
+      {selectedArticle && user && (
+        <CMEArticleViewer
+          articleId={selectedArticle}
+          userId={user.id}
+          onClose={() => setSelectedArticle(null)}
+        />
+      )}
     </div>
   );
 };

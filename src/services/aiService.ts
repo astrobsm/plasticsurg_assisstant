@@ -98,7 +98,6 @@ class AIService {
     // Try multiple sources for API key
     return (
       localStorage.getItem('openai_api_key') ||
-      import.meta.env.VITE_OPENAI_API_KEY ||
       null
     );
   }
@@ -395,6 +394,46 @@ class AIService {
     } catch (error) {
       console.error('Error generating AI content:', error);
       throw new Error('Failed to generate AI content');
+    }
+  }
+
+  /**
+   * Generate response for topic management system with WHO guidelines integration
+   */
+  async generateResponse(prompt: string): Promise<string> {
+    if (!this.isConfigured) {
+      throw new Error('AI service not configured. Please set OpenAI API key.');
+    }
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert medical educator and plastic surgery specialist with comprehensive knowledge of WHO guidelines and international best practices. 
+            
+            When generating educational content:
+            - Base recommendations on WHO guidelines and evidence-based medicine
+            - Include specific references to international publications
+            - Provide practical, actionable clinical guidance
+            - Include safety considerations and patient-centered care principles
+            - Format responses as detailed JSON when requested
+            - Focus on real-world clinical applications`
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 3000,
+        temperature: 0.7
+      });
+
+      return completion.choices[0]?.message?.content || 'Unable to generate content';
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      throw new Error('Failed to generate AI response');
     }
   }
 }

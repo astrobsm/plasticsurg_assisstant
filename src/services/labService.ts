@@ -145,88 +145,123 @@ export type LabCategory =
   | 'drug_levels'
   | 'other';
 
-// Predefined Lab Tests
+// WHO-Compliant Lab Tests by Category
 export const COMMON_LAB_TESTS: Record<LabCategory, LabTest[]> = {
   hematology: [
-    {
-      id: 'fbc',
-      test_code: 'FBC',
-      test_name: 'Full Blood Count',
-      category: 'hematology',
-      sample_type: 'blood',
-      container_type: 'EDTA',
-      fasting_required: false,
-      normal_range: 'Age/gender specific',
-      status: 'pending',
-      priority: 1
-    },
-    {
-      id: 'esr',
-      test_code: 'ESR',
-      test_name: 'Erythrocyte Sedimentation Rate',
-      category: 'hematology',
-      sample_type: 'blood',
-      container_type: 'EDTA',
-      fasting_required: false,
-      normal_range: 'Male: <15mm/hr, Female: <20mm/hr',
-      status: 'pending',
-      priority: 2
-    }
+    { id: 'fbc', test_code: 'FBC', test_name: 'Full Blood Count', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: 'Age/gender specific', status: 'pending', priority: 1 },
+    { id: 'hb', test_code: 'HB', test_name: 'Haemoglobin', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: 'M: 13.5-17.5 g/dL, F: 12.0-15.5 g/dL', status: 'pending', priority: 2 },
+    { id: 'pcv', test_code: 'PCV', test_name: 'Packed Cell Volume', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: 'M: 40-54%, F: 36-46%', status: 'pending', priority: 3 },
+    { id: 'wbc', test_code: 'WBC', test_name: 'White Cell Count with Differential', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: '4.0-11.0 x10⁹/L', status: 'pending', priority: 4 },
+    { id: 'plt', test_code: 'PLT', test_name: 'Platelet Count', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: '150-400 x10⁹/L', status: 'pending', priority: 5 },
+    { id: 'esr', test_code: 'ESR', test_name: 'ESR', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: 'M: <15mm/hr, F: <20mm/hr', status: 'pending', priority: 6 },
+    { id: 'retic', test_code: 'RETIC', test_name: 'Reticulocyte Count', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: '0.5-2.5%', status: 'pending', priority: 7 },
+    { id: 'film', test_code: 'FILM', test_name: 'Blood Film/Smear', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, status: 'pending', priority: 8 },
+    { id: 'sickle', test_code: 'SICKLE', test_name: 'Sickling Test', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, status: 'pending', priority: 9 },
+    { id: 'hbelec', test_code: 'HBELEC', test_name: 'Haemoglobin Electrophoresis', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, status: 'pending', priority: 10 },
+    { id: 'g6pd', test_code: 'G6PD', test_name: 'G6PD Screening', category: 'hematology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, status: 'pending', priority: 11 }
   ],
+  
+  coagulation: [
+    { id: 'pt', test_code: 'PT', test_name: 'Prothrombin Time', category: 'coagulation', sample_type: 'blood', container_type: 'Citrate', fasting_required: false, normal_range: '11-13.5 seconds', status: 'pending', priority: 1 },
+    { id: 'aptt', test_code: 'APTT', test_name: 'APTT', category: 'coagulation', sample_type: 'blood', container_type: 'Citrate', fasting_required: false, normal_range: '26-35 seconds', status: 'pending', priority: 2 },
+    { id: 'inr', test_code: 'INR', test_name: 'INR', category: 'coagulation', sample_type: 'blood', container_type: 'Citrate', fasting_required: false, normal_range: '0.8-1.2', status: 'pending', priority: 3 },
+    { id: 'coag_profile', test_code: 'COAG', test_name: 'Coagulation Profile (PT, APTT, INR)', category: 'coagulation', sample_type: 'blood', container_type: 'Citrate', fasting_required: false, status: 'pending', priority: 4 }
+  ],
+
   biochemistry: [
-    {
-      id: 'u_e',
-      test_code: 'U&E',
-      test_name: 'Urea & Electrolytes',
-      category: 'biochemistry',
-      sample_type: 'blood',
-      container_type: 'Serum',
-      fasting_required: false,
-      normal_range: 'Laboratory specific',
-      status: 'pending',
-      priority: 1
-    },
-    {
-      id: 'lft',
-      test_code: 'LFT',
-      test_name: 'Liver Function Tests',
-      category: 'liver_function',
-      sample_type: 'blood',
-      container_type: 'Serum',
-      fasting_required: true,
-      special_preparation: '12 hours fasting required',
-      normal_range: 'Laboratory specific',
-      status: 'pending',
-      priority: 2
-    }
+    { id: 'u_e', test_code: 'U&E', test_name: 'Urea & Electrolytes', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 1 },
+    { id: 'creat', test_code: 'CREAT', test_name: 'Creatinine', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: 'M: 0.7-1.3 mg/dL, F: 0.6-1.1 mg/dL', status: 'pending', priority: 2 },
+    { id: 'na', test_code: 'NA', test_name: 'Sodium', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '135-145 mmol/L', status: 'pending', priority: 3 },
+    { id: 'k', test_code: 'K', test_name: 'Potassium', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '3.5-5.0 mmol/L', status: 'pending', priority: 4 },
+    { id: 'cl', test_code: 'CL', test_name: 'Chloride', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '98-107 mmol/L', status: 'pending', priority: 5 },
+    { id: 'hco3', test_code: 'HCO3', test_name: 'Bicarbonate', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '22-28 mmol/L', status: 'pending', priority: 6 },
+    { id: 'fbs', test_code: 'FBS', test_name: 'Fasting Blood Sugar', category: 'biochemistry', sample_type: 'blood', container_type: 'Fluoride', fasting_required: true, special_preparation: '8-12 hours fasting required', normal_range: '70-100 mg/dL', status: 'pending', priority: 7 },
+    { id: 'rbs', test_code: 'RBS', test_name: 'Random Blood Sugar', category: 'biochemistry', sample_type: 'blood', container_type: 'Fluoride', fasting_required: false, normal_range: '<140 mg/dL', status: 'pending', priority: 8 },
+    { id: 'hba1c', test_code: 'HBA1C', test_name: 'HbA1c', category: 'biochemistry', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, normal_range: '<5.7%', status: 'pending', priority: 9 },
+    { id: 'ca', test_code: 'CA', test_name: 'Calcium', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '8.5-10.5 mg/dL', status: 'pending', priority: 10 },
+    { id: 'po4', test_code: 'PO4', test_name: 'Phosphate', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '2.5-4.5 mg/dL', status: 'pending', priority: 11 },
+    { id: 'mg', test_code: 'MG', test_name: 'Magnesium', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '1.7-2.2 mg/dL', status: 'pending', priority: 12 },
+    { id: 'uric', test_code: 'URIC', test_name: 'Uric Acid', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: 'M: 3.4-7.0 mg/dL, F: 2.4-6.0 mg/dL', status: 'pending', priority: 13 },
+    { id: 'amy', test_code: 'AMY', test_name: 'Amylase', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '30-110 U/L', status: 'pending', priority: 14 },
+    { id: 'lip', test_code: 'LIP', test_name: 'Lipase', category: 'biochemistry', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '0-160 U/L', status: 'pending', priority: 15 }
   ],
+
+  liver_function: [
+    { id: 'lft', test_code: 'LFT', test_name: 'Liver Function Tests', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12 hours fasting required', status: 'pending', priority: 1 },
+    { id: 'tbil', test_code: 'TBIL', test_name: 'Total Bilirubin', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '0.2-1.2 mg/dL', status: 'pending', priority: 2 },
+    { id: 'dbil', test_code: 'DBIL', test_name: 'Direct Bilirubin', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '0.0-0.3 mg/dL', status: 'pending', priority: 3 },
+    { id: 'alt', test_code: 'ALT', test_name: 'ALT', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '7-56 U/L', status: 'pending', priority: 4 },
+    { id: 'ast', test_code: 'AST', test_name: 'AST', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '10-40 U/L', status: 'pending', priority: 5 },
+    { id: 'alp', test_code: 'ALP', test_name: 'ALP', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '44-147 U/L', status: 'pending', priority: 6 },
+    { id: 'ggt', test_code: 'GGT', test_name: 'GGT', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: 'M: 10-71 U/L, F: 6-42 U/L', status: 'pending', priority: 7 },
+    { id: 'tp', test_code: 'TP', test_name: 'Total Protein', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '6.0-8.3 g/dL', status: 'pending', priority: 8 },
+    { id: 'alb', test_code: 'ALB', test_name: 'Albumin', category: 'liver_function', sample_type: 'blood', container_type: 'Serum', fasting_required: true, normal_range: '3.5-5.5 g/dL', status: 'pending', priority: 9 }
+  ],
+
+  lipid_profile: [
+    { id: 'lipid', test_code: 'LIPID', test_name: 'Lipid Profile', category: 'lipid_profile', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12-14 hours fasting required', status: 'pending', priority: 1 },
+    { id: 'chol', test_code: 'CHOL', test_name: 'Total Cholesterol', category: 'lipid_profile', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12-14 hours fasting', normal_range: '<200 mg/dL', status: 'pending', priority: 2 },
+    { id: 'hdl', test_code: 'HDL', test_name: 'HDL', category: 'lipid_profile', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12-14 hours fasting', normal_range: 'M: >40 mg/dL, F: >50 mg/dL', status: 'pending', priority: 3 },
+    { id: 'ldl', test_code: 'LDL', test_name: 'LDL', category: 'lipid_profile', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12-14 hours fasting', normal_range: '<100 mg/dL', status: 'pending', priority: 4 },
+    { id: 'trig', test_code: 'TRIG', test_name: 'Triglycerides', category: 'lipid_profile', sample_type: 'blood', container_type: 'Serum', fasting_required: true, special_preparation: '12-14 hours fasting', normal_range: '<150 mg/dL', status: 'pending', priority: 5 }
+  ],
+
+  cardiac_markers: [
+    { id: 'trop', test_code: 'TROP', test_name: 'Troponin', category: 'cardiac_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<0.04 ng/mL', status: 'pending', priority: 1 },
+    { id: 'ckmb', test_code: 'CKMB', test_name: 'CK-MB', category: 'cardiac_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '0-3 ng/mL', status: 'pending', priority: 2 }
+  ],
+
   microbiology: [
-    {
-      id: 'blood_culture',
-      test_code: 'BC',
-      test_name: 'Blood Culture',
-      category: 'microbiology',
-      sample_type: 'blood',
-      container_type: 'Blood culture bottle',
-      fasting_required: false,
-      special_preparation: 'Sterile collection technique',
-      status: 'pending',
-      priority: 1
-    }
+    { id: 'blood_cs', test_code: 'BLOODCS', test_name: 'Blood Culture & Sensitivity', category: 'microbiology', sample_type: 'blood', container_type: 'Blood culture bottle', fasting_required: false, special_preparation: 'Sterile collection technique', status: 'pending', priority: 1 },
+    { id: 'urine_cs', test_code: 'URINECS', test_name: 'Urine Culture & Sensitivity', category: 'microbiology', sample_type: 'urine', container_type: 'Sterile container', fasting_required: false, special_preparation: 'Midstream clean catch', status: 'pending', priority: 2 },
+    { id: 'stool_cs', test_code: 'STOOLCS', test_name: 'Stool Culture & Sensitivity', category: 'microbiology', sample_type: 'stool', container_type: 'Stool container', fasting_required: false, status: 'pending', priority: 3 },
+    { id: 'wound_cs', test_code: 'WOUNDCS', test_name: 'Wound Swab Culture', category: 'microbiology', sample_type: 'swab', container_type: 'Swab stick', fasting_required: false, special_preparation: 'Sterile collection', status: 'pending', priority: 4 },
+    { id: 'hvs', test_code: 'HVS', test_name: 'High Vaginal Swab', category: 'microbiology', sample_type: 'swab', container_type: 'Swab stick', fasting_required: false, status: 'pending', priority: 5 },
+    { id: 'sputum_cs', test_code: 'SPUTUMCS', test_name: 'Sputum Culture', category: 'microbiology', sample_type: 'other', container_type: 'Sputum container', fasting_required: false, special_preparation: 'Early morning sample', status: 'pending', priority: 6 },
+    { id: 'csf_cs', test_code: 'CSFCS', test_name: 'CSF Culture', category: 'microbiology', sample_type: 'fluid', container_type: 'Sterile container', fasting_required: false, special_preparation: 'Lumbar puncture sample', status: 'pending', priority: 7 },
+    { id: 'gram', test_code: 'GRAM', test_name: 'Gram Stain', category: 'microbiology', sample_type: 'swab', container_type: 'Swab stick', fasting_required: false, status: 'pending', priority: 8 },
+    { id: 'afb', test_code: 'AFB', test_name: 'AFB/ZN Stain', category: 'microbiology', sample_type: 'other', container_type: 'Sputum container', fasting_required: false, special_preparation: 'Early morning sputum', status: 'pending', priority: 9 },
+    { id: 'mp', test_code: 'MP', test_name: 'Malaria Parasite', category: 'microbiology', sample_type: 'blood', container_type: 'EDTA', fasting_required: false, status: 'pending', priority: 10 },
+    { id: 'widal', test_code: 'WIDAL', test_name: 'Typhoid Test (Widal)', category: 'microbiology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 11 },
+    { id: 'hiv', test_code: 'HIV', test_name: 'HIV Screening', category: 'microbiology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 12 },
+    { id: 'hbsag', test_code: 'HBSAG', test_name: 'Hepatitis B Surface Antigen', category: 'microbiology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 13 },
+    { id: 'hcv', test_code: 'HCV', test_name: 'Hepatitis C Antibody', category: 'microbiology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 14 },
+    { id: 'vdrl', test_code: 'VDRL', test_name: 'VDRL/RPR (Syphilis)', category: 'microbiology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 15 },
+    { id: 'hpylori', test_code: 'HPYLORI', test_name: 'H. Pylori Test', category: 'microbiology', sample_type: 'stool', container_type: 'Stool container', fasting_required: false, status: 'pending', priority: 16 }
   ],
-  // Add more categories as needed
-  immunology: [],
-  histopathology: [],
-  cytology: [],
+
+  immunology: [
+    { id: 'ana', test_code: 'ANA', test_name: 'ANA (Antinuclear Antibody)', category: 'immunology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 1 },
+    { id: 'rf', test_code: 'RF', test_name: 'Rheumatoid Factor', category: 'immunology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<20 IU/mL', status: 'pending', priority: 2 },
+    { id: 'aso', test_code: 'ASO', test_name: 'ASO Titre', category: 'immunology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<200 IU/mL', status: 'pending', priority: 3 },
+    { id: 'crp', test_code: 'CRP', test_name: 'CRP (C-Reactive Protein)', category: 'immunology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<10 mg/L', status: 'pending', priority: 4 },
+    { id: 'bhcg', test_code: 'BHCG', test_name: 'Pregnancy Test (β-hCG)', category: 'immunology', sample_type: 'blood', container_type: 'Serum', fasting_required: false, status: 'pending', priority: 5 }
+  ],
+
+  tumor_markers: [
+    { id: 'psa', test_code: 'PSA', test_name: 'PSA (Prostate Specific Antigen)', category: 'tumor_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<4.0 ng/mL', status: 'pending', priority: 1 },
+    { id: 'cea', test_code: 'CEA', test_name: 'CEA (Carcinoembryonic Antigen)', category: 'tumor_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<5.0 ng/mL', status: 'pending', priority: 2 },
+    { id: 'ca125', test_code: 'CA125', test_name: 'CA 125', category: 'tumor_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<35 U/mL', status: 'pending', priority: 3 },
+    { id: 'ca199', test_code: 'CA199', test_name: 'CA 19-9', category: 'tumor_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<37 U/mL', status: 'pending', priority: 4 },
+    { id: 'afp', test_code: 'AFP', test_name: 'AFP (Alpha-Fetoprotein)', category: 'tumor_markers', sample_type: 'blood', container_type: 'Serum', fasting_required: false, normal_range: '<10 ng/mL', status: 'pending', priority: 5 }
+  ],
+
+  histopathology: [
+    { id: 'biopsy', test_code: 'BIOPSY', test_name: 'Tissue Biopsy', category: 'histopathology', sample_type: 'tissue', container_type: 'Formalin container', fasting_required: false, special_preparation: 'Fresh tissue in formalin', status: 'pending', priority: 1 },
+    { id: 'fnac', test_code: 'FNAC', test_name: 'FNAC', category: 'histopathology', sample_type: 'tissue', container_type: 'Slide/container', fasting_required: false, status: 'pending', priority: 2 },
+    { id: 'frozen', test_code: 'FROZEN', test_name: 'Frozen Section', category: 'histopathology', sample_type: 'tissue', container_type: 'Sterile container', fasting_required: false, special_preparation: 'Fresh tissue, no formalin', status: 'pending', priority: 3 },
+    { id: 'ihc', test_code: 'IHC', test_name: 'Immunohistochemistry', category: 'histopathology', sample_type: 'tissue', container_type: 'Formalin container', fasting_required: false, status: 'pending', priority: 4 }
+  ],
+
+  cytology: [
+    { id: 'pap', test_code: 'PAP', test_name: 'Pap Smear', category: 'cytology', sample_type: 'swab', container_type: 'Slide/preservative', fasting_required: false, status: 'pending', priority: 1 },
+    { id: 'urine_cyto', test_code: 'URINECYTO', test_name: 'Urine Cytology', category: 'cytology', sample_type: 'urine', container_type: 'Sterile container', fasting_required: false, special_preparation: 'Fresh early morning urine', status: 'pending', priority: 2 }
+  ],
+
   endocrinology: [],
-  coagulation: [],
-  cardiac_markers: [],
-  liver_function: [],
-  kidney_function: [],
-  lipid_profile: [],
   thyroid_function: [],
   diabetes_markers: [],
-  tumor_markers: [],
+  kidney_function: [],
   drug_levels: [],
   other: []
 };

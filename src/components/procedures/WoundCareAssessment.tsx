@@ -268,7 +268,7 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
     doc.setFont('helvetica', 'bold');
     doc.text('WOUND HEALING PROGRESS REPORT', pageWidth / 2, 15, { align: 'center' });
     doc.setFontSize(10);
-    doc.text('UNTH Plastic Surgery Department', pageWidth / 2, 25, { align: 'center' });
+    doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT', pageWidth / 2, 25, { align: 'center' });
     doc.text(`Generated: ${new Date().toLocaleDateString('en-NG')}`, pageWidth / 2, 32, { align: 'center' });
 
     yPosition = 50;
@@ -369,110 +369,117 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Title
+    // Minimal header
     doc.setFillColor(14, 159, 110);
-    doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.rect(0, 0, pageWidth, 12, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('WOUND MEASUREMENT REFERENCE TEMPLATE', pageWidth / 2, 12, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text('UNTH Plastic Surgery - AI Measurement Calibration', pageWidth / 2, 20, { align: 'center' });
+    doc.text('WOUND MEASUREMENT REFERENCE - 10cm Lines', pageWidth / 2, 7, { align: 'center' });
 
-    // Instructions
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Instructions:', 15, 45);
+    // Minimal footer
+    doc.setFillColor(14, 159, 110);
+    doc.rect(0, pageHeight - 8, pageWidth, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(6);
+    doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT | Print at 100% - DO NOT SCALE | Cut any line for use', pageWidth / 2, pageHeight - 3, { align: 'center' });
+
+    // Define printable area (avoiding header and footer)
+    const startY = 15;
+    const endY = pageHeight - 10;
+    const availableHeight = endY - startY;
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const instructions = [
-      '1. Print this page on standard A4 white paper',
-      '2. Place the printed reference line beside the wound',
-      '3. Ensure the reference line is clearly visible in the photo',
-      '4. Keep camera perpendicular (directly above) to the wound',
-      '5. Ensure good lighting - avoid shadows on the reference line',
-      '6. The AI will automatically detect the line for accurate calibration'
-    ];
+    const lineLength = 100; // 10cm = 100mm
+    const gapBetweenLines = 25; // 2.5cm = 25mm
+    const lineHeight = 10; // Height allocated for each line including labels
+    const rowSpacing = lineHeight + gapBetweenLines; // Total vertical space per row
+    
+    // Calculate how many rows of lines we can fit
+    const numberOfRows = Math.floor(availableHeight / rowSpacing);
+    
+    // Calculate how many columns we can fit (each line is 100mm wide)
+    const marginX = 10;
+    const availableWidth = pageWidth - (2 * marginX);
+    const numberOfColumns = Math.floor(availableWidth / (lineLength + 20)); // 20mm gap between columns
+    
+    // Center the grid
+    const totalGridWidth = numberOfColumns * lineLength + (numberOfColumns - 1) * 20;
+    const startX = (pageWidth - totalGridWidth) / 2;
+    
+    // Draw cutting guides (light gray dashed lines between rows)
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineDash([2, 2]);
+    doc.setLineWidth(0.3);
+    
+    for (let row = 1; row < numberOfRows; row++) {
+      const y = startY + (row * rowSpacing) - (gapBetweenLines / 2);
+      doc.line(0, y, pageWidth, y);
+    }
+    doc.setLineDash([]); // Reset to solid lines
 
-    let yPos = 55;
-    instructions.forEach(instruction => {
-      doc.text(instruction, 20, yPos);
-      yPos += 7;
-    });
+    // Draw 10cm lines in a grid pattern
+    let lineNumber = 1;
+    
+    for (let row = 0; row < numberOfRows; row++) {
+      for (let col = 0; col < numberOfColumns; col++) {
+        const x = startX + (col * (lineLength + 20));
+        const y = startY + (row * rowSpacing) + 8;
+        
+        // Draw the 10cm line - BOLD
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(4);
+        doc.line(x, y, x + lineLength, y);
+        
+        // End markers (vertical bars)
+        doc.setLineWidth(3);
+        doc.line(x, y - 4, x, y + 4);
+        doc.line(x + lineLength, y - 4, x + lineLength, y + 4);
+        
+        // Label above line
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text('10.0 cm', x + (lineLength / 2), y - 2, { align: 'center' });
+        
+        // Label below line (line number for reference)
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`#${lineNumber}`, x + (lineLength / 2), y + 7, { align: 'center' });
+        
+        lineNumber++;
+      }
+    }
 
-    // Draw reference lines at different lengths
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('CALIBRATION REFERENCE LINES:', 15, 100);
+    // Add corner marks for cutting
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(0.5);
+    const cornerSize = 3;
+    
+    // Add cutting marks between each row
+    for (let row = 1; row < numberOfRows; row++) {
+      const cutY = startY + (row * rowSpacing) - (gapBetweenLines / 2);
+      
+      // Left edge marks
+      doc.line(5, cutY - cornerSize, 5, cutY + cornerSize);
+      doc.line(5 - cornerSize, cutY, 5 + cornerSize, cutY);
+      
+      // Right edge marks
+      doc.line(pageWidth - 5, cutY - cornerSize, pageWidth - 5, cutY + cornerSize);
+      doc.line(pageWidth - 5 - cornerSize, cutY, pageWidth - 5 + cornerSize, cutY);
+    }
 
-    // 5cm line
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('5 cm Reference:', 20, 115);
-    doc.setLineWidth(2);
-    doc.setDrawColor(0, 0, 0);
-    doc.line(20, 120, 20 + 50, 120); // 5cm = ~50mm in PDF
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('← 5.0 cm →', 25, 128);
-
-    // 10cm line (RECOMMENDED)
-    doc.setFillColor(14, 159, 110);
-    doc.rect(18, 140, 104, 35, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('⭐ RECOMMENDED: 10 cm Reference ⭐', 20, 148);
-    doc.setTextColor(0, 0, 0);
-    doc.setLineWidth(3);
-    doc.line(20, 160, 20 + 100, 160); // 10cm = ~100mm in PDF
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('← 10.0 cm →', 40, 170);
-
-    // 15cm line
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('15 cm Reference:', 20, 190);
-    doc.setLineWidth(2);
-    doc.line(20, 195, 20 + 150, 195); // 15cm = ~150mm in PDF
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('← 15.0 cm →', 60, 203);
-
-    // 20cm line
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('20 cm Reference:', 20, 220);
-    doc.setLineWidth(2);
-    doc.line(20, 225, 20 + 200, 225); // 20cm = ~200mm in PDF (extends across page)
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('← 20.0 cm →', 85, 233);
-
-    // Best practices box
-    doc.setFillColor(59, 130, 246);
-    doc.rect(15, 245, pageWidth - 30, 35, 'D');
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('💡 Best Practices for Accurate Measurement:', 20, 253);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('✓ Use the 10 cm line for most wounds (optimal for standard phone cameras)', 25, 260);
-    doc.text('✓ Place paper on same plane as wound (flat, not elevated)', 25, 265);
-    doc.text('✓ Ensure reference line is horizontal in the photo', 25, 270);
-    doc.text('✓ Keep entire reference line and wound visible in one shot', 25, 275);
-
-    // Footer
-    doc.setFillColor(14, 159, 110);
-    doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text('UNTH Plastic Surgery Department | AI-Powered Wound Measurement System', pageWidth / 2, pageHeight - 8, { align: 'center' });
+    // Instructions in remaining space (if any)
+    if (numberOfRows * rowSpacing < availableHeight - 15) {
+      const instructY = startY + (numberOfRows * rowSpacing) + 5;
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INSTRUCTIONS:', pageWidth / 2, instructY, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.text('Cut along dashed lines to separate individual 10cm reference lines • Place beside wound • Photo from directly above', pageWidth / 2, instructY + 4, { align: 'center' });
+    }
 
     // Save
     doc.save('UNTH_Wound_Measurement_Reference_Template.pdf');

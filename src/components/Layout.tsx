@@ -10,7 +10,14 @@ import {
   ClipboardList,
   User,
   LogOut,
-  Bell
+  Bell,
+  BookOpen,
+  Activity,
+  FileText,
+  FolderOpen,
+  UserCog,
+  BedDouble,
+  Home
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -21,11 +28,18 @@ interface LayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: ClipboardList },
   { name: 'Patients', href: '/patients', icon: Users },
+  { name: 'Admissions', href: '/admissions', icon: BedDouble },
+  { name: 'Treatment Planning', href: '/treatment-planning', icon: Activity },
+  { name: 'Patient Summaries', href: '/patient-summaries', icon: FileText },
+  { name: 'Paperwork', href: '/paperwork', icon: FolderOpen },
+  { name: 'MDT', href: '/mdt', icon: UserCog },
   { name: 'Procedures', href: '/procedures', icon: Stethoscope },
   { name: 'Scheduling', href: '/scheduling', icon: Calendar },
+  { name: 'Discharges', href: '/discharges', icon: Home },
   { name: 'Labs', href: '/labs', icon: FlaskConical },
   { name: 'Education', href: '/education', icon: GraduationCap },
   { name: 'MCQ Assessment', href: '/mcq-education', icon: GraduationCap },
+  { name: 'Topic Management', href: '/topic-management', icon: BookOpen },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Admin', href: '/admin', icon: Settings },
 ];
@@ -55,7 +69,10 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-400 hover:text-clinical-dark">
+              <button 
+                className="relative p-2 text-gray-400 hover:text-clinical-dark"
+                title="Notifications"
+              >
                 <Bell className="h-6 w-6" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-danger-500 rounded-full"></span>
               </button>

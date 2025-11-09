@@ -10,9 +10,16 @@ import Scheduling from './pages/Scheduling';
 import Labs from './pages/Labs';
 import Education from './pages/Education';
 import MCQEducation from './pages/MCQEducation';
+import TopicManagement from './pages/TopicManagement';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import NotificationManager from './pages/NotificationManager';
+import TreatmentPlanningPage from './pages/TreatmentPlanningPage';
+import PatientSummariesPage from './pages/PatientSummariesPage';
+import PaperworkPage from './pages/PaperworkPage';
+import MDTPage from './pages/MDTPage';
+import AdmissionsPage from './pages/AdmissionsPage';
+import DischargesPage from './pages/DischargesPage';
 import { useAuthStore } from './store/authStore';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import TreatmentPlanBuilder from './components/TreatmentPlanBuilder';
@@ -66,11 +73,18 @@ function App() {
         <Route path="/patients/:id" element={<PatientProfile />} />
         <Route path="/patients/:id/plans/:planId" element={<TreatmentPlans />} />
         <Route path="/treatment-plan-builder" element={<TreatmentPlanBuilder />} />
+        <Route path="/treatment-planning" element={<TreatmentPlanningPage />} />
+        <Route path="/patient-summaries" element={<PatientSummariesPage />} />
+        <Route path="/paperwork" element={<PaperworkPage />} />
+        <Route path="/admissions" element={<AdmissionsPage />} />
+        <Route path="/discharges" element={<DischargesPage />} />
+        <Route path="/mdt" element={<MDTPage />} />
         <Route path="/procedures" element={<Procedures />} />
         <Route path="/scheduling" element={<Scheduling />} />
         <Route path="/labs" element={<Labs />} />
         <Route path="/education" element={<Education />} />
         <Route path="/mcq-education" element={<MCQEducation />} />
+        <Route path="/topic-management" element={<TopicManagement />} />
         <Route path="/notifications" element={<NotificationManager />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
