@@ -8,7 +8,7 @@ param(
     [string]$SSHUser = "root"
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 # Colors for output
 function Write-Success { param($msg) Write-Host $msg -ForegroundColor Green }
@@ -39,9 +39,11 @@ try {
 # Step 2: Test connection
 Write-Info "`nStep 2: Testing connection to droplet..."
 Write-Warn "You may be prompted for password..."
-$testConnection = ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no $SSHUser@$DropletIP "echo 'Connection successful'" 2>&1
+$testConnection = ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no $SSHUser@$DropletIP "echo 'Connection successful'" 2>&1 | Out-String
 
-if ($LASTEXITCODE -ne 0) {
+if ($testConnection -match 'Connection successful') {
+    Write-Success "[OK] Connection successful"
+} else {
     Write-Err "[ERROR] Failed to connect to droplet"
     Write-Info "Please ensure:"
     Write-Info "  1. Droplet IP is correct: $DropletIP"
@@ -49,7 +51,6 @@ if ($LASTEXITCODE -ne 0) {
     Write-Info "  3. SSH is enabled on the droplet"
     exit 1
 }
-Write-Success "[OK] Connection successful"
 
 # Step 3: Copy deployment script
 Write-Info "`nStep 3: Copying deployment script to droplet..."
