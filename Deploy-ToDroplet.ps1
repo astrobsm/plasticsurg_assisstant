@@ -5,7 +5,8 @@
 
 param(
     [string]$DropletIP = "164.90.225.181",
-    [string]$SSHUser = "root"
+    [string]$SSHUser = "root",
+    [string]$Password = "289e3de323931fad90f44ea7f8"
 )
 
 $ErrorActionPreference = "Continue"
@@ -24,6 +25,12 @@ Write-Host ""
 Write-Info "Droplet IP: $DropletIP"
 Write-Info "SSH User: $SSHUser"
 Write-Host ""
+Write-Host "=== PASSWORD FOR THIS SESSION ===" -ForegroundColor Yellow
+Write-Host $Password -ForegroundColor Green
+Write-Host "=================================" -ForegroundColor Yellow
+Write-Host ""
+Write-Warn "Copy the password above - you'll need to paste it 3 times during deployment"
+Write-Host ""
 
 # Step 1: Check if SSH is available
 Write-Info "Step 1: Checking SSH connectivity..."
@@ -38,19 +45,23 @@ try {
 
 # Step 2: Test connection
 Write-Info "`nStep 2: Testing connection to droplet..."
-Write-Warn "You may be prompted for password..."
-$testConnection = ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no $SSHUser@$DropletIP "echo 'Connection successful'" 2>&1 | Out-String
+Write-Warn "You will be prompted for your password..."
+Write-Host ""
 
-if ($testConnection -match 'Connection successful') {
-    Write-Success "[OK] Connection successful"
-} else {
+# Simple connection test - just try to connect
+Write-Info "Connecting to $SSHUser@$DropletIP..."
+$connectionTest = ssh -o StrictHostKeyChecking=no $SSHUser@$DropletIP "echo 'connected'" 2>&1
+
+if (-not ($connectionTest -match 'connected')) {
     Write-Err "[ERROR] Failed to connect to droplet"
     Write-Info "Please ensure:"
     Write-Info "  1. Droplet IP is correct: $DropletIP"
     Write-Info "  2. You have the root password"
     Write-Info "  3. SSH is enabled on the droplet"
+    Write-Info "Received output: $connectionTest"
     exit 1
 }
+Write-Success "[OK] Connection successful"
 
 # Step 3: Copy deployment script
 Write-Info "`nStep 3: Copying deployment script to droplet..."
