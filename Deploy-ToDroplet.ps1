@@ -54,12 +54,23 @@ if ($testConnection -match 'Connection successful') {
 
 # Step 3: Copy deployment script
 Write-Info "`nStep 3: Copying deployment script to droplet..."
-scp -o StrictHostKeyChecking=no deploy-to-droplet.sh $SSHUser@${DropletIP}:~/
+
+# Convert line endings to Unix (LF) before copying
+$scriptContent = Get-Content -Path "deploy-to-droplet.sh" -Raw
+$scriptContent = $scriptContent -replace "`r`n", "`n"
+$tempFile = "deploy-to-droplet-unix.sh"
+[System.IO.File]::WriteAllText($tempFile, $scriptContent, [System.Text.UTF8Encoding]::new($false))
+
+scp -o StrictHostKeyChecking=no $tempFile $SSHUser@${DropletIP}:~/deploy-to-droplet.sh
 
 if ($LASTEXITCODE -ne 0) {
     Write-Err "[ERROR] Failed to copy deployment script"
+    Remove-Item -Path $tempFile -ErrorAction SilentlyContinue
     exit 1
 }
+
+# Clean up temp file
+Remove-Item -Path $tempFile -ErrorAction SilentlyContinue
 Write-Success "[OK] Deployment script copied"
 
 # Step 4: Execute deployment
