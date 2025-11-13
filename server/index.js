@@ -4,22 +4,37 @@ import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_2024';
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Database connection
-let db;
+// Database connection pool
+let pool;
 async function connectDB() {
   try {
-    db = await mysql.createConnection(process.env.DATABASE_URL);
+    pool = mysql.createPool({
+      uri: process.env.DATABASE_URL,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    });
+    
+    // Test connection
+    const connection = await pool.getConnection();
     console.log('✅ Connected to MySQL database');
+    connection.release();
     
     // Initialize database tables
     await initializeTables();
@@ -36,7 +51,7 @@ async function connectDB() {
 async function initializeTables() {
   try {
     // Users table
-    await db.execute(`
+    await pool.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(36) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -89,13 +104,13 @@ async function createDefaultUsers() {
     ];
 
     for (const user of defaultUsers) {
-      const [existing] = await db.execute(
+      const [existing] = await pool.execute(
         'SELECT id FROM users WHERE email = ?',
         [user.email]
       );
 
       if (existing.length === 0) {
-        await db.execute(
+        await pool.execute(
           `INSERT INTO users (id, email, password, full_name, role, department, specialization, is_approved, is_active)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [user.id, user.email, user.password, user.full_name, user.role, user.department, user.specialization || null, user.is_approved, user.is_active]
@@ -117,7 +132,7 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
@@ -142,7 +157,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const [users] = await db.execute(
+    const [users] = await pool.execute(
       'SELECT * FROM users WHERE email = ? AND is_active = TRUE',
       [email]
     );
@@ -169,7 +184,7 @@ app.post('/api/auth/login', async (req, res) => {
         email: user.email, 
         role: user.role 
       },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -193,7 +208,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Get current user
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    const [users] = await db.execute(
+    const [users] = await pool.execute(
       'SELECT id, email, full_name, role, department, specialization FROM users WHERE id = ?',
       [req.user.id]
     );
@@ -216,7 +231,7 @@ app.get('/api/users', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const [users] = await db.execute(
+    const [users] = await pool.execute(
       'SELECT id, email, full_name, role, department, specialization, is_approved, is_active, created_at FROM users ORDER BY created_at DESC'
     );
 
@@ -237,7 +252,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // Check if user exists
-    const [existing] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+    const [existing] = await pool.execute('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
@@ -245,7 +260,7 @@ app.post('/api/auth/register', async (req, res) => {
     const userId = `user-${Date.now()}`;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.execute(
+    await pool.execute(
       `INSERT INTO users (id, email, password, full_name, role, department, specialization, license_number, phone, is_approved, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, TRUE)`,
       [userId, email, hashedPassword, full_name, role, department, specialization, license_number, phone]
@@ -268,7 +283,7 @@ app.put('/api/users/:id/approve', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    await db.execute(
+    await pool.execute(
       'UPDATE users SET is_approved = TRUE WHERE id = ?',
       [req.params.id]
     );
