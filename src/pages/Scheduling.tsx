@@ -338,14 +338,18 @@ const WardRoundsSection = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Consultant</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.consultant}
                     onChange={(e) => setFormData({ ...formData, consultant: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     title="Consultant"
                     required
-                  />
+                  >
+                    <option value="">Select Consultant</option>
+                    <option value="Dr Okwesili">Dr Okwesili</option>
+                    <option value="Dr Nnadi">Dr Nnadi</option>
+                    <option value="Dr Eze C. B">Dr Eze C. B</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
@@ -709,14 +713,18 @@ const ClinicsSection = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Consultant</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.consultant}
                     onChange={(e) => setFormData({ ...formData, consultant: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     title="Consultant"
                     required
-                  />
+                  >
+                    <option value="">Select Consultant</option>
+                    <option value="Dr Okwesili">Dr Okwesili</option>
+                    <option value="Dr Nnadi">Dr Nnadi</option>
+                    <option value="Dr Eze C. B">Dr Eze C. B</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Max Patients</label>
@@ -1553,13 +1561,16 @@ const SurgerySection = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Consultants</label>
                   <div className="flex space-x-2 mb-2">
-                    <input
-                      type="text"
+                    <select
                       value={newConsultant}
                       onChange={(e) => setNewConsultant(e.target.value)}
-                      placeholder="Add consultant name"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
+                    >
+                      <option value="">Select Consultant</option>
+                      <option value="Dr Okwesili">Dr Okwesili</option>
+                      <option value="Dr Nnadi">Dr Nnadi</option>
+                      <option value="Dr Eze C. B">Dr Eze C. B</option>
+                    </select>
                     <button
                       type="button"
                       onClick={addConsultant}

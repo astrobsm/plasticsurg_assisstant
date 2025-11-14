@@ -2853,10 +2853,9 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="">Select Consultant</option>
-              <option value="Prof. A. B. Chukwu">Prof. A. B. Chukwu</option>
-              <option value="Dr. C. D. Okafor">Dr. C. D. Okafor</option>
-              <option value="Dr. E. F. Adaeze">Dr. E. F. Adaeze</option>
-              <option value="Dr. G. H. Emeka">Dr. G. H. Emeka</option>
+              <option value="Dr Okwesili">Dr Okwesili</option>
+              <option value="Dr Nnadi">Dr Nnadi</option>
+              <option value="Dr Eze C. B">Dr Eze C. B</option>
             </select>
           </div>
 

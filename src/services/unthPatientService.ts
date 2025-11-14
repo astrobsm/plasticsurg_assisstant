@@ -220,9 +220,9 @@ class UNTHPatientService {
 
   // Consultants list for auto-assignment
   private consultants: string[] = [
-    'Dr Nnadi Emmanuel',
-    'Dr Okwesili O.',
-    'Dr Eze CB'
+    'Dr Okwesili',
+    'Dr Nnadi',
+    'Dr Eze C. B'
   ];
 
   /**
