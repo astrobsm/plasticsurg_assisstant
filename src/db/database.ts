@@ -441,25 +441,53 @@ export class PlasticSurgeonDB extends Dexie {
       obj.created_at = new Date();
       obj.updated_at = new Date();
       obj.synced = false;
+      // Ensure deleted is explicitly false on creation
+      if (obj.deleted === undefined) {
+        obj.deleted = false;
+      }
+      console.log('✅ Creating patient:', obj.hospital_number, obj.first_name, obj.last_name);
     });
 
     this.patients.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
       if (!modifications.hasOwnProperty('synced')) {
-        modifications.synced = false;
+        (modifications as any).synced = false;
       }
+      // Prevent accidental deletion - must be explicit
+      if ((modifications as any).deleted === undefined && obj.deleted === undefined) {
+        (modifications as any).deleted = false;
+      }
+      // Warn if patient is being marked as deleted
+      if ((modifications as any).deleted === true) {
+        console.warn('⚠️ Patient being marked as deleted:', primKey, obj.hospital_number);
+      }
+      console.log('📝 Updating patient:', primKey, modifications);
+    });
+
+    // Add hook to track deletions
+    this.patients.hook('deleting', (primKey, obj, trans) => {
+      console.error('🗑️ PATIENT BEING DELETED:', primKey, obj.hospital_number, obj.first_name, obj.last_name);
+      console.trace('Delete called from:');
     });
 
     this.treatment_plans.hook('creating', (primKey, obj, trans) => {
       obj.created_at = new Date();
       obj.updated_at = new Date();
       obj.synced = false;
+      // Ensure deleted is explicitly false on creation
+      if (obj.deleted === undefined) {
+        obj.deleted = false;
+      }
     });
 
     this.treatment_plans.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
       if (!modifications.hasOwnProperty('synced')) {
-        modifications.synced = false;
+        (modifications as any).synced = false;
+      }
+      // Prevent accidental deletion
+      if ((modifications as any).deleted === undefined && obj.deleted === undefined) {
+        (modifications as any).deleted = false;
       }
     });
 
@@ -467,12 +495,20 @@ export class PlasticSurgeonDB extends Dexie {
       obj.created_at = new Date();
       obj.updated_at = new Date();
       obj.synced = false;
+      // Ensure deleted is explicitly false on creation
+      if (obj.deleted === undefined) {
+        obj.deleted = false;
+      }
     });
 
     this.plan_steps.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
       if (!modifications.hasOwnProperty('synced')) {
-        modifications.synced = false;
+        (modifications as any).synced = false;
+      }
+      // Prevent accidental deletion
+      if ((modifications as any).deleted === undefined && obj.deleted === undefined) {
+        (modifications as any).deleted = false;
       }
     });
 
@@ -483,7 +519,7 @@ export class PlasticSurgeonDB extends Dexie {
     });
 
     this.dvt_assessments.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
     });
 
     this.pressure_sore_assessments.hook('creating', (primKey, obj, trans) => {
@@ -492,7 +528,7 @@ export class PlasticSurgeonDB extends Dexie {
     });
 
     this.pressure_sore_assessments.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
     });
 
     this.nutritional_assessments.hook('creating', (primKey, obj, trans) => {
@@ -501,7 +537,7 @@ export class PlasticSurgeonDB extends Dexie {
     });
 
     this.nutritional_assessments.hook('updating', (modifications, primKey, obj, trans) => {
-      modifications.updated_at = new Date();
+      (modifications as any).updated_at = new Date();
     });
   }
 }

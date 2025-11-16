@@ -138,9 +138,28 @@ const Education: React.FC = () => {
     }
   };
 
-  const saveApiKey = () => {
-    aiService.setApiKey(apiKey);
-    alert('API key saved successfully!');
+  const saveApiKey = async () => {
+    try {
+      const response = await fetch('/api/ai/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          setting_key: 'openai_api_key',
+          setting_value: apiKey
+        })
+      });
+
+      if (response.ok) {
+        alert('API key saved successfully! AI features are now enabled.');
+      } else {
+        alert('Failed to save API key. Please check your permissions.');
+      }
+    } catch (error) {
+      alert('Error saving API key. Please try again.');
+    }
   };
 
   if (loading) {

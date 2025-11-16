@@ -472,12 +472,29 @@ class TreatmentPlanningService {
 
   // Get all treatment plans for a patient
   async getPatientTreatmentPlans(patientId: string): Promise<EnhancedTreatmentPlan[]> {
-    return await db.treatment_plans.where('patient_id').equals(patientId).toArray();
+    const patientIdNum = parseInt(patientId);
+    const plans = await db.treatment_plans.where('patient_id').equals(patientIdNum).toArray();
+    return plans.map(plan => ({
+      ...plan,
+      id: plan.id?.toString() || '',
+      patient_id: plan.patient_id.toString(),
+      patient_name: plan.patient_name || '',
+      hospital_number: plan.hospital_number || '',
+      admission_date: plan.admission_date || new Date()
+    })) as EnhancedTreatmentPlan[];
   }
 
   // Get active treatment plans
   async getActiveTreatmentPlans(): Promise<EnhancedTreatmentPlan[]> {
-    return await db.treatment_plans.where('status').equals('active').toArray();
+    const plans = await db.treatment_plans.where('status').equals('active').toArray();
+    return plans.map(plan => ({
+      ...plan,
+      id: plan.id?.toString() || '',
+      patient_id: plan.patient_id.toString(),
+      patient_name: plan.patient_name || '',
+      hospital_number: plan.hospital_number || '',
+      admission_date: plan.admission_date || new Date()
+    })) as EnhancedTreatmentPlan[];
   }
 }
 

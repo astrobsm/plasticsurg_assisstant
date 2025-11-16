@@ -284,7 +284,6 @@ class UNTHPatientService {
       const transfer: PatientTransfer = {
         id: this.generateId(),
         transfer_date: new Date(),
-        status: 'pending',
         ...transferData
       };
 
@@ -511,37 +510,167 @@ class UNTHPatientService {
 
   private async generateAISummary(patientData: any, summaryType: string, additionalContext?: string) {
     const prompt = `
-    Generate a comprehensive ${summaryType} summary for a patient at University of Nigeria Teaching Hospital (UNTH).
+    You are a clinical AI assistant at University of Nigeria Teaching Hospital (UNTH), Plastic Surgery Department.
+    Generate a comprehensive ${summaryType} summary based on the following patient data.
     
-    Patient Data: ${JSON.stringify(patientData, null, 2)}
-    Additional Context: ${additionalContext || 'None'}
+    PATIENT INFORMATION:
+    - Name: ${patientData.name || 'Not provided'}
+    - Age: ${patientData.age || 'Not provided'}
+    - Sex: ${patientData.sex || 'Not provided'}
+    - Hospital Number: ${patientData.hospital_number || 'Not provided'}
     
-    Please provide:
-    1. A detailed clinical summary
-    2. Key clinical points
-    3. Current active problems
-    4. Current medications
-    5. Pending investigations
-    6. Management plan
-    7. Confidence level (0-100)
+    ADMISSION DETAILS:
+    - Admission Date: ${patientData.admission_date || 'Not provided'}
+    - Admission Type: ${patientData.admission_type || 'Not provided'}
+    - Ward: ${patientData.ward || 'Not provided'}
+    - Consultant: ${patientData.consultant || 'Not provided'}
     
-    Format as JSON with fields: summary, keyPoints, currentProblems, medications, investigationsPending, plan, confidence
+    CLINICAL PRESENTATION:
+    - Chief Complaint: ${patientData.chief_complaint || 'Not provided'}
+    - Presenting Complaint: ${patientData.presenting_complaint || 'Not provided'}
+    - History of Presenting Complaint: ${patientData.history_presenting_complaint || 'Not provided'}
+    
+    PAST MEDICAL HISTORY:
+    - Medical History: ${patientData.past_medical_history || 'Not provided'}
+    - Surgical History: ${patientData.past_surgical_history || 'Not provided'}
+    - Allergies: ${patientData.allergies?.join(', ') || 'None known'}
+    - Current Medications: ${patientData.current_medications?.join(', ') || 'None'}
+    
+    EXAMINATION FINDINGS:
+    - General Examination: ${patientData.general_examination || 'Not provided'}
+    - Systemic Examination: ${patientData.systemic_examination || 'Not provided'}
+    - Local Examination: ${patientData.local_examination || 'Not provided'}
+    - Vital Signs: ${JSON.stringify(patientData.vital_signs || {}) || 'Not provided'}
+    
+    INVESTIGATION RESULTS:
+    ${patientData.investigation_results ? JSON.stringify(patientData.investigation_results, null, 2) : 'No investigations yet'}
+    
+    DIAGNOSIS:
+    - Primary Diagnosis: ${patientData.primary_diagnosis || 'Not provided'}
+    - Differential Diagnoses: ${patientData.differential_diagnoses?.join(', ') || 'Not provided'}
+    
+    TREATMENT PLAN:
+    ${patientData.treatment_plan || 'Not provided'}
+    
+    ADDITIONAL CONTEXT:
+    ${additionalContext || 'None'}
+    
+    Please generate a comprehensive clinical ${summaryType} summary with the following structure in JSON format:
+    {
+      "summary": "A detailed narrative clinical summary (3-5 paragraphs)",
+      "keyPoints": ["Array of 5-7 key clinical points"],
+      "currentProblems": ["Active clinical problems requiring attention"],
+      "medications": ["Current medications with dosages"],
+      "investigationsPending": ["Pending investigations or results"],
+      "plan": ["Management plan steps"],
+      "confidence": 85
+    }
+    
+    Focus on:
+    1. Clear clinical presentation
+    2. Relevant past medical/surgical history
+    3. Key examination findings
+    4. Current diagnosis and working differential
+    5. Active treatment plan and pending investigations
+    6. Patient-specific concerns or special considerations
     `;
 
     try {
-      const response = await aiService.generateStudyRecommendations('system', [85], []);
-      // This is a simplified implementation - in practice, you'd use OpenAI for medical summaries
+      // Check if AI is configured
+      const isConfigured = await aiService.isReady();
+      if (!isConfigured) {
+        // Return fallback summary with actual patient data
+        return {
+          summary: `${summaryType} Summary for ${patientData.name || 'Patient'}
+          
+Admission: ${patientData.admission_date ? new Date(patientData.admission_date).toLocaleDateString() : 'Not specified'}
+Chief Complaint: ${patientData.chief_complaint || 'Not documented'}
+Diagnosis: ${patientData.primary_diagnosis || 'Pending'}
+
+AI-powered detailed summary is currently unavailable. Please configure OpenAI API key in Admin settings to enable comprehensive AI-generated summaries.
+
+Current clinical data has been documented above. For full AI analysis, please complete the AI configuration.`,
+          keyPoints: [
+            `Patient: ${patientData.name || 'Not named'}`,
+            `Admission Type: ${patientData.admission_type || 'Not specified'}`,
+            `Chief Complaint: ${patientData.chief_complaint || 'Not documented'}`,
+            `Primary Diagnosis: ${patientData.primary_diagnosis || 'Pending'}`,
+            `Consultant: ${patientData.consultant || 'Not assigned'}`,
+            'AI features require OpenAI configuration'
+          ],
+          currentProblems: patientData.current_problems || [patientData.primary_diagnosis || 'Diagnosis pending'],
+          medications: patientData.current_medications || ['Medications to be reviewed'],
+          investigationsPending: patientData.investigations_pending || ['Full workup pending'],
+          plan: patientData.management_plan || ['Treatment plan to be formulated'],
+          confidence: 50
+        };
+      }
+
+      // Use AI service to generate comprehensive summary
+      const aiResponse = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert plastic surgery clinical assistant. Generate comprehensive, evidence-based clinical summaries in proper medical format. Always respond with valid JSON only.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          model: 'gpt-4',
+          max_tokens: 2000
+        })
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error('AI service unavailable');
+      }
+
+      const aiData = await aiResponse.json();
+      const parsedResponse = JSON.parse(aiData.response);
+
       return {
-        summary: `Patient summary generated for ${summaryType}`,
-        keyPoints: ['AI-generated summary pending OpenAI configuration'],
-        currentProblems: ['Pending AI analysis'],
-        medications: ['Current medications to be reviewed'],
-        investigationsPending: ['Investigations pending'],
-        plan: ['Management plan to be determined'],
-        confidence: 75
+        summary: parsedResponse.summary || 'Summary generation incomplete',
+        keyPoints: parsedResponse.keyPoints || ['AI summary pending'],
+        currentProblems: parsedResponse.currentProblems || ['Pending analysis'],
+        medications: parsedResponse.medications || ['Medications to be reviewed'],
+        investigationsPending: parsedResponse.investigationsPending || ['Investigations pending'],
+        plan: parsedResponse.plan || ['Management plan pending'],
+        confidence: parsedResponse.confidence || 75
       };
     } catch (error) {
-      throw new Error('AI summary generation failed');
+      console.error('AI summary generation error:', error);
+      // Fallback with patient data
+      return {
+        summary: `Clinical Summary for ${patientData.name || 'Patient'}
+        
+This ${summaryType} summary is based on available clinical data. AI-enhanced analysis encountered an error.
+
+Admission Details: ${patientData.admission_date ? new Date(patientData.admission_date).toLocaleDateString() : 'Not specified'}
+Chief Complaint: ${patientData.chief_complaint || 'Not documented'}
+Primary Diagnosis: ${patientData.primary_diagnosis || 'Pending'}
+Consultant: ${patientData.consultant || 'Not assigned'}
+
+Please review patient file for complete clinical details or retry AI summary generation.`,
+        keyPoints: [
+          `Patient admitted: ${patientData.admission_date ? new Date(patientData.admission_date).toLocaleDateString() : 'Date not specified'}`,
+          `Presenting with: ${patientData.chief_complaint || 'Complaint not documented'}`,
+          `Diagnosis: ${patientData.primary_diagnosis || 'Under investigation'}`,
+          'AI analysis encountered error - manual review recommended'
+        ],
+        currentProblems: patientData.current_problems || [patientData.primary_diagnosis || 'Assessment pending'],
+        medications: patientData.current_medications || ['Review required'],
+        investigationsPending: ['Full clinical workup'],
+        plan: ['Complete clinical assessment', 'Formulate treatment plan'],
+        confidence: 40
+      };
     }
   }
 
@@ -610,10 +739,20 @@ class UNTHPatientService {
       admission_date: registrationData.admission_date,
       created_at: new Date(),
       updated_at: new Date(),
-      synced: false
+      synced: false,
+      deleted: false  // Explicitly set deleted to false
     };
 
     const id = await db.patients.add(patientRecord);
+    
+    // Verify the patient was saved
+    const savedPatient = await db.patients.get(id);
+    if (!savedPatient) {
+      throw new Error('Failed to save patient to database');
+    }
+    
+    console.log('Patient registered successfully:', { id, hospital_number: patientRecord.hospital_number });
+    
     return id.toString();
   }
 
@@ -627,7 +766,56 @@ class UNTHPatientService {
   }
 
   private async generateAdmissionSummary(patientId: string, registrationData: PatientRegistration) {
-    // Generate AI admission summary
+    try {
+      // Build comprehensive patient data from registration
+      const patientData = {
+        name: `${registrationData.firstName} ${registrationData.lastName}`,
+        age: registrationData.dateOfBirth ? this.calculateAge(new Date(registrationData.dateOfBirth)) : 'Not provided',
+        sex: registrationData.sex,
+        hospital_number: registrationData.hospitalNumber,
+        admission_date: registrationData.admissionDate,
+        admission_type: registrationData.admissionType,
+        ward: registrationData.ward,
+        consultant: registrationData.consultant,
+        chief_complaint: registrationData.chiefComplaint,
+        presenting_complaint: registrationData.presentingComplaint,
+        history_presenting_complaint: registrationData.historyPresentingComplaint,
+        past_medical_history: registrationData.pastMedicalHistory,
+        past_surgical_history: registrationData.pastSurgicalHistory,
+        allergies: registrationData.allergies,
+        current_medications: registrationData.currentMedications,
+        general_examination: registrationData.generalExamination,
+        systemic_examination: registrationData.systemicExamination,
+        local_examination: registrationData.localExamination,
+        vital_signs: registrationData.vitalSigns,
+        investigation_results: registrationData.investigationResults,
+        primary_diagnosis: registrationData.primaryDiagnosis,
+        differential_diagnoses: registrationData.differentialDiagnoses,
+        treatment_plan: registrationData.treatmentPlan,
+        current_problems: registrationData.currentProblems,
+        investigations_pending: registrationData.investigationsPending,
+        management_plan: registrationData.managementPlan
+      };
+
+      // Generate AI-powered admission summary
+      await this.generatePatientSummary(patientId, 'admission', 
+        `Patient admitted to ${registrationData.ward} ward under ${registrationData.consultant}`);
+    } catch (error) {
+      console.error('Error generating admission summary:', error);
+      // Don't throw - admission can proceed without AI summary
+    }
+  }
+
+  private calculateAge(dateOfBirth: Date): string {
+    const today = new Date();
+    let age = today.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+      age--;
+    }
+    
+    return `${age} years`;
   }
 
   private async generateTransferSummary(transfer: PatientTransfer) {
@@ -635,7 +823,14 @@ class UNTHPatientService {
   }
 
   private async saveSummary(summary: PatientSummary) {
-    // Save summary to database
+    try {
+      // Save to IndexedDB
+      await db.patient_summaries.add(summary as any);
+      console.log('✅ Patient summary saved to database');
+    } catch (error) {
+      console.error('Error saving patient summary:', error);
+      throw new Error('Failed to save patient summary');
+    }
   }
 
   private async saveProgressRecord(progress: TreatmentProgress) {

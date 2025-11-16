@@ -7,6 +7,13 @@ import App from './App.tsx';
 import './index.css';
 import { cmeArticleScheduler } from './services/cmeArticleScheduler';
 import { mcqGenerationService } from './services/mcqGenerationService';
+import { startDataMonitoring, enableDatabaseDebugMode } from './utils/dataIntegrity';
+
+// Enable database debug mode to track all operations
+enableDatabaseDebugMode();
+
+// Start monitoring patient data to detect any data loss
+const stopMonitoring = startDataMonitoring();
 
 // Service Worker registration
 if ('serviceWorker' in navigator) {

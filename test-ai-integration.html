@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Integration Test - Plastic Surgeon Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0E9F6E 0%, #047857 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #0E9F6E;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #6B7280;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .test-section {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #374151;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status.pending { background: #F59E0B; }
+        .status.success { background: #10B981; }
+        .status.error { background: #EF4444; }
+        .btn {
+            background: #0E9F6E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #047857;
+        }
+        .btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .result {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 13px;
+            color: #374151;
+        }
+        .info {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #1E40AF;
+        }
+        .label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Integration Test</h1>
+        <p class="subtitle">Test OpenAI integration for Plastic Surgeon Assistant PWA</p>
+
+        <!-- Test 1: Backend Connection -->
+        <div class="test-section">
+            <h2><span class="status pending" id="status1"></span>Test 1: Backend API Connection</h2>
+            <p style="margin-bottom: 15px; color: #6B7280; font-size: 14px;">
+                Check if backend server is running and accessible
+            </p>
+            <button class="btn" onclick="testBackendConnection()">Test Backend</button>
+            <div class="result" id="result1" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: Authentication -->
+        <div class="test-section">
+            <h2><span class="status pending" id="status2"></span>Test 2: User Authentication</h2>
+            <label class="label">Email:</label>
+            <input type="text" id="email" value="admin@unth.edu.ng" placeholder="admin@unth.edu.ng">
+            <label class="label">Password:</label>
+            <input type="password" id="password" value="admin123" placeholder="admin123">
+            <button class="btn" onclick="testAuthentication()">Login & Get Token</button>
+            <div class="result" id="result2" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: AI Configuration -->
+        <div class="test-section">
+            <h2><span class="status pending" id="status3"></span>Test 3: AI Settings Check</h2>
+            <p style="margin-bottom: 15px; color: #6B7280; font-size: 14px;">
+                Check if OpenAI API key is configured (requires authentication)
+            </p>
+            <button class="btn" onclick="testAISettings()" id="btnAISettings">Check AI Configuration</button>
+            <div class="result" id="result3" style="display: none;"></div>
+        </div>
+
+        <!-- Test 4: AI Chat Test -->
+        <div class="test-section">
+            <h2><span class="status pending" id="status4"></span>Test 4: AI Chat Endpoint</h2>
+            <div class="info">
+                ⚠️ This test requires a valid OpenAI API key to be configured in Admin settings
+            </div>
+            <label class="label">Test Message:</label>
+            <input type="text" id="testMessage" value="What are the key principles of wound healing?" placeholder="Enter a medical question">
+            <button class="btn" onclick="testAIChat()" id="btnAIChat">Test AI Chat</button>
+            <div class="result" id="result4" style="display: none;"></div>
+        </div>
+
+        <!-- Test 5: Configure API Key -->
+        <div class="test-section">
+            <h2><span class="status pending" id="status5"></span>Test 5: Configure OpenAI API Key</h2>
+            <div class="info">
+                🔑 Enter your OpenAI API key to enable AI features
+            </div>
+            <label class="label">OpenAI API Key:</label>
+            <input type="password" id="apiKey" placeholder="sk-...">
+            <button class="btn" onclick="saveAPIKey()" id="btnSaveKey">Save API Key</button>
+            <div class="result" id="result5" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        const API_BASE = 'http://164.90.225.181';
+
+        function updateStatus(testNum, status) {
+            const statusEl = document.getElementById(`status${testNum}`);
+            statusEl.className = `status ${status}`;
+        }
+
+        function showResult(testNum, content, isError = false) {
+            const resultEl = document.getElementById(`result${testNum}`);
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = `<pre>${isError ? '❌ ' : '✅ '}${content}</pre>`;
+        }
+
+        async function testBackendConnection() {
+            updateStatus(1, 'pending');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateStatus(1, 'success');
+                    showResult(1, `Backend server is running!\n\nResponse:\n${JSON.stringify(data, null, 2)}`);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                updateStatus(1, 'error');
+                showResult(1, `Error: ${error.message}`, true);
+            }
+        }
+
+        async function testAuthentication() {
+            updateStatus(2, 'pending');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    updateStatus(2, 'success');
+                    showResult(2, `Login successful!\n\nUser: ${data.user.name}\nRole: ${data.user.role}\nToken: ${authToken.substring(0, 20)}...`);
+                    
+                    // Enable AI tests
+                    document.getElementById('btnAISettings').disabled = false;
+                    document.getElementById('btnAIChat').disabled = false;
+                    document.getElementById('btnSaveKey').disabled = false;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                updateStatus(2, 'error');
+                showResult(2, `Error: ${error.message}`, true);
+                authToken = null;
+            }
+        }
+
+        async function testAISettings() {
+            if (!authToken) {
+                alert('Please login first (Test 2)');
+                return;
+            }
+
+            updateStatus(3, 'pending');
+            try {
+                const response = await fetch(`${API_BASE}/api/ai/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStatus(3, 'success');
+                    const hasKey = data.settings && data.settings.openai_api_key;
+                    showResult(3, `AI Configuration Status:\n\n${hasKey ? '✅ OpenAI API Key is configured' : '⚠️ No API key configured'}\n\nSettings:\n${JSON.stringify(data, null, 2)}`);
+                } else {
+                    throw new Error(data.message || 'Failed to fetch settings');
+                }
+            } catch (error) {
+                updateStatus(3, 'error');
+                showResult(3, `Error: ${error.message}`, true);
+            }
+        }
+
+        async function testAIChat() {
+            if (!authToken) {
+                alert('Please login first (Test 2)');
+                return;
+            }
+
+            updateStatus(4, 'pending');
+            const message = document.getElementById('testMessage').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/ai/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: message }
+                        ],
+                        model: 'gpt-3.5-turbo',
+                        max_tokens: 150
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.response) {
+                    updateStatus(4, 'success');
+                    showResult(4, `AI Response:\n\n${data.response}\n\n---\nModel: ${data.model}\nTokens: ${data.usage?.total_tokens || 'N/A'}`);
+                } else {
+                    throw new Error(data.error || 'AI request failed');
+                }
+            } catch (error) {
+                updateStatus(4, 'error');
+                showResult(4, `Error: ${error.message}\n\n💡 Make sure to configure an OpenAI API key in Test 5`, true);
+            }
+        }
+
+        async function saveAPIKey() {
+            if (!authToken) {
+                alert('Please login first (Test 2)');
+                return;
+            }
+
+            updateStatus(5, 'pending');
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!apiKey || !apiKey.startsWith('sk-')) {
+                updateStatus(5, 'error');
+                showResult(5, 'Invalid API key format. Should start with "sk-"', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/ai/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        setting_key: 'openai_api_key',
+                        setting_value: apiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStatus(5, 'success');
+                    showResult(5, `API Key saved successfully!\n\nYou can now test the AI Chat (Test 4)`);
+                    
+                    // Clear the input for security
+                    document.getElementById('apiKey').value = '';
+                } else {
+                    throw new Error(data.message || 'Failed to save API key');
+                }
+            } catch (error) {
+                updateStatus(5, 'error');
+                showResult(5, `Error: ${error.message}`, true);
+            }
+        }
+
+        // Disable AI tests initially
+        document.getElementById('btnAISettings').disabled = true;
+        document.getElementById('btnAIChat').disabled = true;
+        document.getElementById('btnSaveKey').disabled = true;
+    </script>
+</body>
+</html>

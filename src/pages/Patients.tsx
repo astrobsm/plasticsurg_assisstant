@@ -18,8 +18,14 @@ export const Patients: React.FC = () => {
   const loadPatients = async () => {
     try {
       setLoading(true);
-      const patientData = await db.patients.orderBy('created_at').reverse().toArray();
-      setPatients(patientData);
+      const patientData = await db.patients
+        .orderBy('created_at')
+        .reverse()
+        .toArray();
+      
+      // Filter out deleted patients
+      const activePatients = patientData.filter(p => !p.deleted);
+      setPatients(activePatients);
     } catch (error) {
       console.error('Error loading patients:', error);
     } finally {

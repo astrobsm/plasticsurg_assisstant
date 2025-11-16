@@ -24,10 +24,10 @@ import {
   MedicationAdministration,
   DischargeTimeline
 } from '../services/treatmentPlanningService';
-import { useAuth } from '../store/authStore';
+import { useAuthStore } from '../store/authStore';
 
 export default function TreatmentPlanningEnhanced() {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [treatmentPlans, setTreatmentPlans] = useState<EnhancedTreatmentPlan[]>([]);

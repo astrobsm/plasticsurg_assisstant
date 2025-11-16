@@ -382,6 +382,9 @@ app.post('/api/ai/chat', authenticateToken, async (req, res) => {
 
     const apiKey = settings[0].setting_value;
 
+    // Ensure max_tokens is an integer
+    const maxTokensInt = parseInt(max_tokens);
+
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -392,7 +395,7 @@ app.post('/api/ai/chat', authenticateToken, async (req, res) => {
       body: JSON.stringify({
         model,
         messages,
-        max_tokens,
+        max_tokens: maxTokensInt,
         temperature: 0.7
       })
     });

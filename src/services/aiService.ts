@@ -110,7 +110,11 @@ class AIService {
   /**
    * Call OpenAI API through backend proxy
    */
-  private async callAI(messages: Array<{role: string, content: string}>, maxTokens: number = 2000): Promise<string> {
+  private async callAI(
+    messages: Array<{role: string, content: string}>, 
+    model: string = 'gpt-4',
+    maxTokens: number = 2000
+  ): Promise<string> {
     const response = await fetch('/api/ai/chat', {
       method: 'POST',
       headers: {
@@ -119,8 +123,8 @@ class AIService {
       },
       body: JSON.stringify({
         messages,
-        model: 'gpt-4',
-        max_tokens: maxTokens
+        model,
+        max_tokens: Number(maxTokens) // Ensure it's a number, not string
       })
     });
 
@@ -130,7 +134,7 @@ class AIService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.response || data.choices?.[0]?.message?.content || '';
   }
 
   /**
@@ -235,25 +239,19 @@ class AIService {
     `;
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are a medical education expert creating assessment questions for plastic surgery residents. Generate high-quality, clinically relevant multiple choice questions."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.6,
-        max_tokens: 2500
-      });
+      const response = await this.callAI([
+        {
+          role: "system",
+          content: "You are a medical education expert creating assessment questions for plastic surgery residents. Generate high-quality, clinically relevant multiple choice questions."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ], 'gpt-4', 2500);
 
-      const response = completion.choices[0]?.message?.content;
       if (!response) {
-        throw new Error('No response from OpenAI');
+        throw new Error('No response from AI');
       }
 
       const questionsData = JSON.parse(response);
@@ -294,23 +292,17 @@ class AIService {
     `;
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are a medical education mentor for plastic surgery residents. Provide specific, helpful study guidance."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 800
-      });
+      const response = await this.callAI([
+        {
+          role: "system",
+          content: "You are a medical education mentor for plastic surgery residents. Provide specific, helpful study guidance."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ], 'gpt-3.5-turbo', 800);
 
-      const response = completion.choices[0]?.message?.content;
       if (!response) {
         return this.getFallbackRecommendations(weakAreas);
       }
@@ -387,23 +379,18 @@ class AIService {
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert medical AI assistant specializing in plastic surgery and laboratory medicine. Provide accurate, evidence-based responses."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      });
+      const response = await this.callAI([
+        {
+          role: "system",
+          content: "You are an expert medical AI assistant specializing in plastic surgery and laboratory medicine. Provide accurate, evidence-based responses."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ], 'gpt-4', 1000);
 
-      return completion.choices[0]?.message?.content || 'Unable to generate content';
+      return response || 'Unable to generate content';
     } catch (error) {
       console.error('Error generating AI content:', error);
       throw new Error('Failed to generate AI content');
@@ -419,12 +406,10 @@ class AIService {
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert medical educator and plastic surgery specialist with comprehensive knowledge of WHO guidelines and international best practices. 
+      const response = await this.callAI([
+        {
+          role: "system",
+          content: `You are an expert medical educator and plastic surgery specialist with comprehensive knowledge of WHO guidelines and international best practices. 
             
             When generating educational content:
             - Base recommendations on WHO guidelines and evidence-based medicine
@@ -433,17 +418,14 @@ class AIService {
             - Include safety considerations and patient-centered care principles
             - Format responses as detailed JSON when requested
             - Focus on real-world clinical applications`
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 3000,
-        temperature: 0.7
-      });
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ], 'gpt-4', 3000);
 
-      return completion.choices[0]?.message?.content || 'Unable to generate content';
+      return response || 'Unable to generate content';
     } catch (error) {
       console.error('Error generating AI response:', error);
       throw new Error('Failed to generate AI response');
