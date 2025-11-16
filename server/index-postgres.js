@@ -137,59 +137,61 @@ const authenticateToken = (req, res, next) => {
 // AUTHENTICATION ROUTES
 // =====================================================
 
-// Login endpoint
-app.post('/api/login', async (req, res) => {
+// Single handler supports legacy and new auth routes
+const handleLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
-    
+
     const result = await pool.query(
       'SELECT * FROM users WHERE email = $1 AND is_active = true',
       [email.toLowerCase()]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+
     const user = result.rows[0];
-    
+
     if (!user.is_approved) {
       return res.status(403).json({ error: 'Account pending approval' });
     }
-    
+
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        email: user.email, 
-        role: user.role 
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role
       },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
-    
-    // Remove password from response
+
     delete user.password;
-    
-    res.json({ 
-      token, 
+
+    res.json({
+      token,
       user,
       message: 'Login successful'
     });
-    
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+};
+
+// Login endpoint aliases for compatibility with older frontend builds
+app.post('/api/login', handleLogin);
+app.post('/api/auth/login', handleLogin);
 
 // Register endpoint
 app.post('/api/register', async (req, res) => {
@@ -210,8 +212,8 @@ app.post('/api/register', async (req, res) => {
     
     const result = await pool.query(`
       INSERT INTO users (email, password, full_name, role, department, specialization, license_number, phone)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, email, full_name, role, department, is_approved, is_active, created_at
+      // Login endpoint handler reused for legacy routes
+      const handleLogin = async (req, res) => {
     `, [email.toLowerCase(), hashedPassword, full_name, role, department, specialization, license_number, phone]);
     
     res.status(201).json({ 
@@ -262,10 +264,11 @@ app.get('/api/users', authenticateToken, async (req, res) => {
       ORDER BY created_at DESC
     `);
     
-    res.json({ users: result.rows });
+      app.post('/api/login', handleLogin);
+      app.post('/api/auth/login', handleLogin);
   } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+      // Register endpoint handler reused for legacy routes
+      const handleRegister = async (req, res) => {
   }
 });
 
@@ -298,10 +301,11 @@ app.patch('/api/users/:id/approve', authenticateToken, async (req, res) => {
 // Get AI setting
 async function getAISettings(key) {
   try {
-    const result = await pool.query(
+      app.post('/api/register', handleRegister);
+      app.post('/api/auth/register', handleRegister);
       'SELECT setting_value FROM ai_settings WHERE setting_key = $1',
-      [key]
-    );
+      // Current user endpoint handler reused for legacy routes
+      const handleGetCurrentUser = async (req, res) => {
     return result.rows.length > 0 ? result.rows[0].setting_value : null;
   } catch (error) {
     console.error('Get AI settings error:', error);
@@ -319,7 +323,8 @@ app.post('/api/ai/settings', authenticateToken, async (req, res) => {
     const { openai_api_key } = req.body;
     
     await pool.query(`
-      INSERT INTO ai_settings (setting_key, setting_value, is_encrypted, updated_by)
+      app.get('/api/user', authenticateToken, handleGetCurrentUser);
+      app.get('/api/auth/me', authenticateToken, handleGetCurrentUser);
       VALUES ($1, $2, $3, $4)
       ON CONFLICT (setting_key) 
       DO UPDATE SET setting_value = $2, updated_by = $4, updated_at = CURRENT_TIMESTAMP
