@@ -293,6 +293,28 @@ app.patch('/api/users/:id/approve', authenticateToken, async (req, res) => {
   }
 });
 
+// Update user active status (admin only)
+app.patch('/api/users/:id/status', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const { id } = req.params;
+    const { is_active } = req.body;
+    
+    await pool.query(
+      'UPDATE users SET is_active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [is_active, id]
+    );
+    
+    res.json({ message: 'User active status updated' });
+  } catch (error) {
+    console.error('Update user status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // =====================================================
 // AI SETTINGS ROUTES
 // =====================================================

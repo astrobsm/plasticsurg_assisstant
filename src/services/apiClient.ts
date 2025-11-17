@@ -72,9 +72,17 @@ class ApiClient {
     return this.request('/users');
   }
 
-  async approveUser(userId: string) {
+  async approveUser(userId: string, isApproved: boolean = true) {
     return this.request(`/users/${userId}/approve`, {
-      method: 'PUT'
+      method: 'PATCH',
+      body: JSON.stringify({ is_approved: isApproved })
+    });
+  }
+
+  async updateUserStatus(userId: string, isActive: boolean) {
+    return this.request(`/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive })
     });
   }
 

@@ -47,7 +47,7 @@ export function UserApprovalManager() {
     }
   };
 
-  const handleApprove = async (userId: number) => {
+  const handleApprove = async (userId: string) => {
     if (!confirm('Are you sure you want to approve this registration?')) {
       return;
     }
@@ -61,7 +61,7 @@ export function UserApprovalManager() {
     }
   };
 
-  const handleReject = async (userId: number) => {
+  const handleReject = async (userId: string) => {
     const reason = prompt('Enter rejection reason:');
     if (!reason) return;
 
@@ -74,7 +74,7 @@ export function UserApprovalManager() {
     }
   };
 
-  const handleToggleActive = async (userId: number, currentStatus: boolean) => {
+  const handleToggleActive = async (userId: string, currentStatus: boolean) => {
     const action = currentStatus ? 'deactivate' : 'activate';
     if (!confirm(`Are you sure you want to ${action} this user?`)) {
       return;
@@ -118,15 +118,15 @@ export function UserApprovalManager() {
 
   const filteredPending = pendingUsers.filter(user => {
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesRole && user.status === 'pending';
+    return matchesSearch && matchesRole;
   });
 
   const filteredApproved = approvedUsers.filter(user => {
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     return matchesSearch && matchesRole;
@@ -143,7 +143,7 @@ export function UserApprovalManager() {
         <div className="flex items-center gap-4">
           <div className="bg-blue-50 px-4 py-2 rounded-lg">
             <div className="text-sm text-blue-600 font-medium">Pending Requests</div>
-            <div className="text-2xl font-bold text-blue-900">{pendingUsers.filter(u => u.status === 'pending').length}</div>
+            <div className="text-2xl font-bold text-blue-900">{pendingUsers.length}</div>
           </div>
           <div className="bg-green-50 px-4 py-2 rounded-lg">
             <div className="text-sm text-green-600 font-medium">Active Users</div>
@@ -244,7 +244,7 @@ export function UserApprovalManager() {
                           <User className="h-5 w-5 text-primary-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-clinical-dark">{user.name}</div>
+                          <div className="font-medium text-clinical-dark">{user.full_name}</div>
                           <div className="text-sm text-gray-500">{user.email}</div>
                         </div>
                       </div>
@@ -340,7 +340,7 @@ export function UserApprovalManager() {
                           <User className="h-5 w-5 text-primary-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-clinical-dark">{user.name}</div>
+                          <div className="font-medium text-clinical-dark">{user.full_name}</div>
                           <div className="text-sm text-gray-500">{user.email}</div>
                         </div>
                       </div>
@@ -416,7 +416,7 @@ export function UserApprovalManager() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="text-clinical-dark font-medium">{selectedUser.name}</p>
+                  <p className="text-clinical-dark font-medium">{selecteduser.full_name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
@@ -475,3 +475,4 @@ export function UserApprovalManager() {
     </div>
   );
 }
+
