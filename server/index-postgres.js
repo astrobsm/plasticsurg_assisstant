@@ -334,8 +334,22 @@ app.post('/api/ai/settings', authenticateToken, async (req, res) => {
   }
 });
 
-// Get AI settings (admin only)
-app.get('/api/ai/settings', authenticateToken, async (req, res) => {
+// Check if AI is configured (public endpoint)
+app.get('/api/ai/settings', async (req, res) => {
+  try {
+    const apiKey = await getAISettings('openai_api_key');
+    res.json({ 
+      configured: !!apiKey,
+      hasOpenAI: !!apiKey 
+    });
+  } catch (error) {
+    console.error('Check AI settings error:', error);
+    res.json({ configured: false, hasOpenAI: false });
+  }
+});
+
+// Get full AI settings (admin only)
+app.get('/api/ai/settings/full', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'super_admin') {
       return res.status(403).json({ error: 'Access denied' });
