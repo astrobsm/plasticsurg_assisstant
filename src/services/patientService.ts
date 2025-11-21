@@ -6,6 +6,23 @@
 import { apiClient } from './apiClient';
 import { db } from '../db/database';
 
+/**
+ * Normalize patient data to ensure arrays are always arrays
+ */
+function normalizePatientData(patient: any) {
+  if (!patient) return patient;
+  
+  return {
+    ...patient,
+    allergies: Array.isArray(patient.allergies) 
+      ? patient.allergies 
+      : (patient.allergies ? [patient.allergies] : []),
+    comorbidities: Array.isArray(patient.comorbidities)
+      ? patient.comorbidities
+      : (patient.comorbidities ? [patient.comorbidities] : [])
+  };
+}
+
 class PatientService {
   /**
    * Get all patients - fetches from API and updates local IndexedDB
@@ -17,13 +34,14 @@ class PatientService {
       
       // Update local IndexedDB for offline access
       if (patients && patients.length > 0) {
-        await db.patients.bulkPut(patients.map((p: any) => ({
+        const normalizedPatients = patients.map((p: any) => normalizePatientData({
           ...p,
           synced: true
-        })));
+        }));
+        await db.patients.bulkPut(normalizedPatients);
       }
       
-      return patients;
+      return patients.map(normalizePatientData);
     } catch (error) {
       console.error('Error fetching patients from API:', error);
       
@@ -47,7 +65,9 @@ class PatientService {
       
       // Update local cache
       if (patient) {
-        await db.patients.put({ ...patient, synced: true });
+        const normalized = normalizePatientData({ ...patient, synced: true });
+        await db.patients.put(normalized);
+        return normalized;
       }
       
       return patient;
@@ -59,7 +79,7 @@ class PatientService {
         typeof id === 'string' ? id : Number(id)
       );
       
-      return localPatient;
+      return localPatient ? normalizePatientData(localPatient) : localPatient;
     }
   }
 

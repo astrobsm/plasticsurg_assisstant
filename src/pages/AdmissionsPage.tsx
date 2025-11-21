@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../db/database';
 import { patientService } from '../services/patientService';
 import { admissionService, Admission, AdmissionStatistics } from '../services/admissionService';
+import { patientAssignmentService } from '../services/patientAssignmentService';
 
 interface Ward {
   name: string;
@@ -107,8 +108,8 @@ export default function AdmissionsPage() {
     setStatistics(stats);
   };
 
-  const handlePatientSelect = (patientId: number) => {
-    const patient = patients.find(p => p.id === patientId);
+  const handlePatientSelect = (patientId: string) => {
+    const patient = patients.find(p => String(p.id) === patientId);
     setSelectedPatient(patient);
   };
 
@@ -189,6 +190,20 @@ export default function AdmissionsPage() {
       };
 
       await admissionService.createAdmission(admissionData);
+      
+      // Automatically assign patient to team
+      try {
+        await patientAssignmentService.autoAssignPatient(
+          selectedPatient.id!.toString(),
+          `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+          selectedPatient.hospital_number,
+          routeOfAdmission === 'emergency' ? 'emergency' : 'elective'
+        );
+        console.log('Patient automatically assigned to team');
+      } catch (assignmentError) {
+        console.error('Failed to auto-assign team:', assignmentError);
+        // Don't fail admission if team assignment fails
+      }
       
       alert('Patient admitted successfully!');
       resetForm();
@@ -356,7 +371,7 @@ export default function AdmissionsPage() {
                     </label>
                     <select
                       value={selectedPatient?.id || ''}
-                      onChange={(e) => handlePatientSelect(Number(e.target.value))}
+                      onChange={(e) => handlePatientSelect(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                       required
                     >

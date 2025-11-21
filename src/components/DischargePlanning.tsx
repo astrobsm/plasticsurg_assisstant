@@ -70,7 +70,7 @@ export const DischargePlanning: React.FC<DischargePlanningProps> = ({
           disabled={isGenerating}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {isGenerating ? 'Generating AI Content...' : '🤖 Generate AI Discharge Plan'}
+          {isGenerating ? 'Generating Content...' : '🤖 Generate Discharge Plan'}
         </button>
       </div>
 
@@ -133,7 +133,7 @@ export const DischargePlanning: React.FC<DischargePlanningProps> = ({
 
       {aiGeneratedContent && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">🤖 AI Generated Discharge Summary</h4>
+          <h4 className="font-medium text-blue-900 mb-2">🤖 Auto-Generated Discharge Summary</h4>
           <p className="text-blue-800 text-sm">{aiGeneratedContent.discharge_summary}</p>
         </div>
       )}

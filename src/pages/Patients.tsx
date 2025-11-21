@@ -213,7 +213,7 @@ export const Patients: React.FC = () => {
                       {/* Allergies and Comorbidities */}
                       {(patient.allergies?.length || patient.comorbidities?.length) && (
                         <div className="mt-2 flex items-center space-x-4">
-                          {patient.allergies && patient.allergies.length > 0 && (
+                          {patient.allergies && Array.isArray(patient.allergies) && patient.allergies.length > 0 && (
                             <div className="flex items-center space-x-1">
                               <span className="text-xs text-red-600 font-medium">Allergies:</span>
                               <div className="flex space-x-1">

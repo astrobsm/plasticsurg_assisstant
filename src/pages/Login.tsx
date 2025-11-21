@@ -9,6 +9,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const { login } = useAuthStore();
 
   // Registration form state
@@ -40,6 +41,7 @@ export default function Login() {
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     // Validation
     if (regData.password !== regData.confirmPassword) {
@@ -55,7 +57,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await userManagementService.submitRegistrationRequest({
+      const service = userManagementService;
+      await service.submitRegistrationRequest({
         name: regData.name,
         email: regData.email,
         password: regData.password,
@@ -65,9 +68,9 @@ export default function Login() {
         registration_number: regData.registration_number
       });
 
-      alert('Registration request submitted successfully! Your account will be activated once approved by the administrator.');
+      setSuccessMessage('Registration request submitted successfully! Your account will be activated once approved by the administrator.');
       
-      // Reset form and close modal
+      // Reset form
       setRegData({
         name: '',
         email: '',
@@ -78,8 +81,14 @@ export default function Login() {
         department: '',
         registration_number: ''
       });
-      setShowRegistration(false);
+      
+      // Close modal after 2 seconds to show success message
+      setTimeout(() => {
+        setShowRegistration(false);
+        setSuccessMessage('');
+      }, 2000);
     } catch (error: any) {
+      console.error('Registration error:', error);
       setError(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
@@ -180,6 +189,20 @@ export default function Login() {
             </div>
 
             <form onSubmit={handleRegistration} className="p-6 space-y-4">
+              {/* Success Message */}
+              {successMessage && (
+                <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-800">
+                  <strong>Success!</strong> {successMessage}
+                </div>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-800">
+                  <strong>Error:</strong> {error}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-clinical-dark mb-1">

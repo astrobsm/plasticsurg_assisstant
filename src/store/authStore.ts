@@ -45,43 +45,22 @@ export const useAuthStore = create<AuthState>()(
           const backendAvailable = await checkBackend();
           set({ useBackend: backendAvailable });
 
-          if (backendAvailable) {
-            // Use backend API
-            const response = await apiClient.login(email, password);
-            
-            const user: User = {
-              id: response.user.id,
-              name: response.user.full_name,
-              email: response.user.email,
-              role: response.user.role as any,
-              privileges: [] // Will be populated from role
-            };
-
-            set({ user, token: response.token });
-          } else {
-            // Fallback to IndexedDB
-            const authenticatedUser = await userManagementService.authenticateUser(email, password);
-            
-            if (!authenticatedUser) {
-              throw new Error('Invalid email or password');
-            }
-
-            if (!authenticatedUser.is_active) {
-              throw new Error('Your account has been deactivated. Please contact the administrator.');
-            }
-
-            const user: User = {
-              id: authenticatedUser.id!.toString(),
-              name: authenticatedUser.name,
-              email: authenticatedUser.email,
-              role: authenticatedUser.role as any,
-              privileges: authenticatedUser.privileges
-            };
-
-            const token = btoa(JSON.stringify({ userId: user.id, timestamp: Date.now() }));
-            set({ user, token });
+          if (!backendAvailable) {
+            throw new Error('Unable to connect to server. Please check your connection.');
           }
+
+          // Use backend API
+          const response = await apiClient.login(email, password);
           
+          const user: User = {
+            id: response.user.id,
+            name: response.user.full_name,
+            email: response.user.email,
+            role: response.user.role as any,
+            privileges: [] // Will be populated from role
+          };
+
+          set({ user, token: response.token });
           set({ loading: false });
         } catch (error) {
           set({ loading: false });

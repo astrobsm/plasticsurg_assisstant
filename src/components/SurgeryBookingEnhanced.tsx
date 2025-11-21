@@ -13,9 +13,11 @@ import {
   User,
   FileText,
   Image as ImageIcon,
-  X
+  X,
+  Activity
 } from 'lucide-react';
 import { schedulingService, SurgeryBooking } from '../services/schedulingService';
+import PreoperativeAssessmentForm from './PreoperativeAssessmentForm';
 
 interface PreOpEvaluation {
   lab_tests_done: boolean;
@@ -45,6 +47,9 @@ export default function SurgeryBookingEnhanced({ selectedDate, onRefresh }: Surg
   const [selectedSurgery, setSelectedSurgery] = useState<PatientSurgeryDetails | null>(null);
   const [showPatientSummary, setShowPatientSummary] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [showPreopAssessment, setShowPreopAssessment] = useState(false);
+  const [selectedPatientForPreop, setSelectedPatientForPreop] = useState<string>('');
+  const [selectedSurgeryForPreop, setSelectedSurgeryForPreop] = useState<string>('');
   const [filterDate, setFilterDate] = useState(selectedDate);
   const [patients, setPatients] = useState<any[]>([]);
 
@@ -491,6 +496,17 @@ export default function SurgeryBookingEnhanced({ selectedDate, onRefresh }: Surg
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      setSelectedPatientForPreop(surgery.patient_id);
+                      setSelectedSurgeryForPreop(String(surgery.id));
+                      setShowPreopAssessment(true);
+                    }}
+                    className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                    title="Preoperative Assessment"
+                  >
+                    <Activity className="h-5 w-5" />
+                  </button>
                   <button
                     onClick={() => viewPatientSummary(surgery)}
                     className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
@@ -1085,6 +1101,23 @@ export default function SurgeryBookingEnhanced({ selectedDate, onRefresh }: Surg
             </form>
           </div>
         </div>
+      )}
+
+      {/* Preoperative Assessment Form */}
+      {showPreopAssessment && (
+        <PreoperativeAssessmentForm
+          patientId={selectedPatientForPreop}
+          surgeryBookingId={selectedSurgeryForPreop}
+          onClose={() => {
+            setShowPreopAssessment(false);
+            setSelectedPatientForPreop('');
+            setSelectedSurgeryForPreop('');
+          }}
+          onSave={() => {
+            loadSurgeries();
+            setShowPreopAssessment(false);
+          }}
+        />
       )}
     </div>
   );

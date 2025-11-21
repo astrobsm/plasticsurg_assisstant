@@ -17,7 +17,10 @@ import {
   FolderOpen,
   UserCog,
   BedDouble,
-  Home
+  Home,
+  Droplet,
+  BookOpenCheck,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
@@ -36,7 +39,11 @@ const navigation = [
   { name: 'Procedures', href: '/procedures', icon: Stethoscope },
   { name: 'Scheduling', href: '/scheduling', icon: Calendar },
   { name: 'Discharges', href: '/discharges', icon: Home },
+  { name: 'Blood Transfusion', href: '/blood-transfusion', icon: Droplet },
+  { name: 'Ward Rounds', href: '/ward-rounds', icon: Activity },
   { name: 'Labs', href: '/labs', icon: FlaskConical },
+  { name: 'Patient Education', href: '/patient-education', icon: BookOpenCheck },
+  { name: 'Shopping List', href: '/shopping-list', icon: ShoppingCart },
   { name: 'Education', href: '/education', icon: GraduationCap },
   { name: 'MCQ Assessment', href: '/mcq-education', icon: GraduationCap },
   { name: 'Topic Management', href: '/topic-management', icon: BookOpen },

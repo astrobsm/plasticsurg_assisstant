@@ -383,7 +383,7 @@ const MCQEducation: React.FC = () => {
                 onChange={(e) => setTopicForm({ ...topicForm, content: e.target.value })}
                 rows={10}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 font-mono text-sm"
-                placeholder="Paste detailed clinical content including:&#10;- Key concepts&#10;- Management principles&#10;- Clinical scenarios&#10;- Guidelines and protocols&#10;&#10;AI will automatically generate 25 clinical scenario-based MCQs from this content."
+                placeholder="Paste detailed clinical content including:&#10;- Key concepts&#10;- Management principles&#10;- Clinical scenarios&#10;- Guidelines and protocols&#10;&#10;System will automatically generate 25 clinical scenario-based MCQs from this content."
               />
               <p className="text-xs text-gray-500 mt-1">
                 💡 Tip: Paste comprehensive content for better MCQ generation. Include case examples, management protocols, and key decision points.
@@ -414,7 +414,7 @@ const MCQEducation: React.FC = () => {
                 What Happens Next?
               </h4>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                <li>AI generates 25 clinical scenario MCQs for each selected level</li>
+                <li>System generates 25 clinical scenario MCQs for each selected level</li>
                 <li>Test automatically scheduled for next Tuesday at 9:00 AM</li>
                 <li>Push notifications sent to all users in target levels</li>
                 <li>Each question worth 4 marks, wrong answer: -1 mark</li>
@@ -782,7 +782,7 @@ const MCQEducation: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-semibold text-lg">
-                      {new Date(session.startedAt).toLocaleDateString()}
+                      {session.startedAt ? new Date(session.startedAt).toLocaleDateString() : 'N/A'}
                     </h4>
                     <p className="text-sm text-gray-600">
                       Level: {session.userLevel.replace('_', ' ').toUpperCase()}
@@ -937,7 +937,7 @@ const MCQEducation: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(article.published_date).toLocaleDateString()}</span>
+                      <span>{article.published_date ? new Date(article.published_date).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
 

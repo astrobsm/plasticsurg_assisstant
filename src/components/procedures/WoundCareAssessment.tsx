@@ -622,13 +622,13 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
             onClick={() => setShowAIMeasurement(!showAIMeasurement)}
             className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
           >
-            {showAIMeasurement ? '📏 Manual Entry' : '📸 AI Measurement'}
+            {showAIMeasurement ? '📏 Manual Entry' : '📸 Auto Measurement'}
           </button>
         </div>
 
         <p className="text-sm text-gray-700 mb-4">
           {showAIMeasurement 
-            ? '🎯 Upload a wound photo and use AI segmentation to automatically measure dimensions with high accuracy'
+            ? '🎯 Upload a wound photo and use automated segmentation to automatically measure dimensions with high accuracy'
             : '✍️ Enter wound dimensions manually'}
         </p>
 
@@ -686,7 +686,7 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
                         <li>Most accurate calibration method</li>
                         <li>Easy to standardize across measurements</li>
                         <li>Human-readable for verification</li>
-                        <li>High contrast for AI detection</li>
+                        <li>High contrast for automated detection</li>
                         <li>Reusable reference (can laminate)</li>
                       </ul>
                     </div>
@@ -828,12 +828,12 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
               {isProcessing ? (
                 <>
                   <span className="animate-spin">⏳</span>
-                  <span>Processing AI Measurement...</span>
+                  <span>Processing Measurement...</span>
                 </>
               ) : (
                 <>
                   <span>🤖</span>
-                  <span>Perform AI Measurement</span>
+                  <span>Perform Auto Measurement</span>
                 </>
               )}
             </button>
@@ -841,7 +841,7 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
             {/* Segmentation Result */}
             {aiMeasurementResult && (
               <div className="bg-white rounded-lg p-4 border-2 border-green-300">
-                <h5 className="font-bold text-green-800 mb-3">✅ AI Measurement Results</h5>
+                <h5 className="font-bold text-green-800 mb-3">✅ Measurement Results</h5>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                   <div className="bg-green-50 p-3 rounded">
                     <p className="text-xs text-gray-600">Length</p>
@@ -866,7 +866,7 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
                   className="w-full h-auto rounded-md border-2 border-green-300"
                   style={{ maxHeight: '300px' }}
                 />
-                <p className="text-xs text-gray-500 mt-2 text-center">AI Segmentation Mask</p>
+                <p className="text-xs text-gray-500 mt-2 text-center">Auto Segmentation Mask</p>
               </div>
             )}
           </div>
@@ -958,7 +958,7 @@ export const WoundCareAssessmentForm: React.FC<WoundCareAssessmentFormProps> = (
                       Length: {measurement.length} cm × Width: {measurement.width} cm = Area: {measurement.area} cm²
                     </p>
                     <p className="text-xs text-gray-500">
-                      Method: {measurement.measurement_method === 'ai_segmentation' ? '🤖 AI Segmentation' : '✍️ Manual'}
+                      Method: {measurement.measurement_method === 'ai_segmentation' ? '🤖 Auto Segmentation' : '✍️ Manual'}
                       {measurement.notes && ` | ${measurement.notes}`}
                     </p>
                   </div>

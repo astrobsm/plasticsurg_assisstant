@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Removing Service Worker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #0E9F6E; }
+        .status { padding: 10px; margin: 10px 0; background: #f0f0f0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { background: #0E9F6E; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0a7c57; }
+    </style>
+</head>
+<body>
+    <h1>Service Worker Removal Tool</h1>
+    <div id="status"></div>
+    <button id="reload" style="display:none;" onclick="window.location.href='/';">Go to App</button>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        const reloadBtn = document.getElementById('reload');
+        
+        async function removeServiceWorker() {
+            let messages = [];
+            
+            try {
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    if (registrations.length === 0) {
+                        messages.push('<div class="status">ℹ️ No service workers found</div>');
+                    } else {
+                        for (let registration of registrations) {
+                            const success = await registration.unregister();
+                            if (success) {
+                                messages.push('<div class="status success">✅ Service worker unregistered: ' + registration.scope + '</div>');
+                            } else {
+                                messages.push('<div class="status error">❌ Failed to unregister: ' + registration.scope + '</div>');
+                            }
+                        }
+                    }
+                } else {
+                    messages.push('<div class="status">ℹ️ Service workers not supported in this browser</div>');
+                }
+                
+                // Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    
+                    if (cacheNames.length === 0) {
+                        messages.push('<div class="status">ℹ️ No caches found</div>');
+                    } else {
+                        for (let cacheName of cacheNames) {
+                            const deleted = await caches.delete(cacheName);
+                            if (deleted) {
+                                messages.push('<div class="status success">✅ Cache deleted: ' + cacheName + '</div>');
+                            } else {
+                                messages.push('<div class="status error">❌ Failed to delete cache: ' + cacheName + '</div>');
+                            }
+                        }
+                    }
+                } else {
+                    messages.push('<div class="status">ℹ️ Cache API not supported in this browser</div>');
+                }
+                
+                messages.push('<div class="status success"><strong>✅ Cleanup complete!</strong><br>Click the button below to return to the app with fresh files.</div>');
+                reloadBtn.style.display = 'inline-block';
+                
+            } catch (error) {
+                messages.push('<div class="status error">❌ Error: ' + error.message + '</div>');
+            }
+            
+            statusDiv.innerHTML = messages.join('');
+        }
+        
+        // Run immediately
+        removeServiceWorker();
+    </script>
+</body>
+</html>

@@ -25,7 +25,16 @@ export function AISettingsPanel() {
 
   const loadAISettings = async () => {
     try {
-      const response = await fetch('/api/ai/settings', {
+      // Check if API key exists in localStorage first
+      const storedKey = localStorage.getItem('openai_api_key');
+      if (storedKey) {
+        setApiKey('••••••••••••••••'); // Show masked key
+        setAiStatus('configured');
+        return;
+      }
+
+      // Otherwise check server
+      const response = await fetch('/api/ai/settings/full', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -33,9 +42,9 @@ export function AISettingsPanel() {
 
       if (response.ok) {
         const data = await response.json();
-        const keySetting = data.settings?.find((s: any) => s.setting_key === 'openai_api_key');
-        if (keySetting) {
-          setApiKey(keySetting.setting_value);
+        if (data.openai_api_key) {
+          localStorage.setItem('openai_api_key', data.openai_api_key);
+          setApiKey('••••••••••••••••'); // Show masked key
           setAiStatus('configured');
         } else {
           setAiStatus('not-configured');
@@ -50,8 +59,8 @@ export function AISettingsPanel() {
   };
 
   const handleSaveSettings = async () => {
-    if (!apiKey.trim()) {
-      alert('Please enter an OpenAI API key');
+    if (!apiKey.trim() || apiKey === '••••••••••••••••') {
+      alert('Please enter a valid OpenAI API key');
       return;
     }
 
@@ -64,12 +73,15 @@ export function AISettingsPanel() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({
-          setting_key: 'openai_api_key',
-          setting_value: apiKey
+          openai_api_key: apiKey
         })
       });
 
       if (response.ok) {
+        // Store in localStorage for AI functionality
+        localStorage.setItem('openai_api_key', apiKey);
+        // Mask the key in the UI
+        setApiKey('••••••••••••••••');
         setAiStatus('configured');
         alert('AI settings saved successfully!');
       } else {
@@ -134,7 +146,7 @@ export function AISettingsPanel() {
         <div>
           <h3 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
             <Server className="h-5 w-5 text-blue-600" />
-            <span>AI Configuration</span>
+            <span>Clinical Assistant Configuration</span>
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             Configure OpenAI integration for patient summaries, CME generation, and clinical insights
@@ -210,12 +222,12 @@ export function AISettingsPanel() {
               {isTestingAI ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Testing AI...</span>
+                  <span>Testing Connection...</span>
                 </>
               ) : (
                 <>
                   <Activity className="h-4 w-4" />
-                  <span>Test AI Connection</span>
+                  <span>Test Connection</span>
                 </>
               )}
             </button>
@@ -230,7 +242,7 @@ export function AISettingsPanel() {
                   )}
                   <div className="flex-1">
                     <p className={`font-medium ${testResult.status === 'success' ? 'text-green-900' : 'text-red-900'}`}>
-                      {testResult.status === 'success' ? 'AI Connection Successful' : 'AI Connection Failed'}
+                      {testResult.status === 'success' ? 'Connection Successful' : 'Connection Failed'}
                     </p>
                     <p className={`text-sm mt-1 ${testResult.status === 'success' ? 'text-green-700' : 'text-red-700'}`}>
                       {testResult.message}
@@ -243,7 +255,7 @@ export function AISettingsPanel() {
         )}
 
         <div className="pt-4 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">AI Features</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-2">Clinical Features</h4>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center space-x-2">
               <CheckCircle className="h-4 w-4 text-green-600" />

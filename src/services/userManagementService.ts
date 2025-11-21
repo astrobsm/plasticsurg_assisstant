@@ -76,6 +76,31 @@ class UserManagementService {
       throw error;
     }
   }
+
+  async submitRegistrationRequest(userData: {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    phone?: string;
+    department?: string;
+    registration_number?: string;
+  }): Promise<void> {
+    try {
+      await apiClient.register({
+        full_name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role as any,
+        phone: userData.phone,
+        department: userData.department,
+        license_number: userData.registration_number
+      });
+    } catch (error) {
+      console.error('Error submitting registration request:', error);
+      throw error;
+    }
+  }
 }
 
 export const userManagementService = new UserManagementService();

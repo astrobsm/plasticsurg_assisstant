@@ -209,7 +209,7 @@ const TreatmentPlanningPage: React.FC = () => {
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {format(plan.admission_date, 'MMM d, yyyy')}
+                  {format(new Date(plan.admission_date), 'MMM d, yyyy')}
                 </span>
                 <span className="flex items-center gap-1">
                   <Activity className="w-3 h-3" />
@@ -304,7 +304,7 @@ const TreatmentPlanningPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-500" />
                           <span className="font-medium">
-                            {format(review.review_date, 'MMM d, yyyy')}
+                            {format(new Date(review.review_date), 'MMM d, yyyy')}
                           </span>
                         </div>
                         <span

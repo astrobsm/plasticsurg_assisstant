@@ -253,7 +253,7 @@ class CMEService {
 
       // Gather diagnoses from recent patients
       const recentPatients = await db.patients
-        .where('createdAt')
+        .where('created_at')
         .above(lastWeek)
         .toArray();
 

@@ -911,7 +911,7 @@ export const ComprehensiveTreatmentPlanForm: React.FC<ComprehensiveTreatmentPlan
                   <input
                     type="date"
                     required
-                    value={dischargePlan.initial_discharge_date ? format(dischargePlan.initial_discharge_date, 'yyyy-MM-dd') : ''}
+                    value={dischargePlan.initial_discharge_date ? format(new Date(dischargePlan.initial_discharge_date), 'yyyy-MM-dd') : ''}
                     onChange={(e) => setDischargePlan({
                       ...dischargePlan,
                       initial_discharge_date: new Date(e.target.value),

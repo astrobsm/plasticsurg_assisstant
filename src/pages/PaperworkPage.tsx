@@ -324,7 +324,7 @@ const PaperworkPage: React.FC = () => {
             <input
               type="date"
               required
-              value={format(formData.admission_date, 'yyyy-MM-dd')}
+              value={format(new Date(formData.admission_date), 'yyyy-MM-dd')}
               onChange={(e) => setFormData({ ...formData, admission_date: new Date(e.target.value) })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
@@ -334,7 +334,7 @@ const PaperworkPage: React.FC = () => {
             <input
               type="date"
               required
-              value={format(formData.discharge_date, 'yyyy-MM-dd')}
+              value={format(new Date(formData.discharge_date), 'yyyy-MM-dd')}
               onChange={(e) => setFormData({ ...formData, discharge_date: new Date(e.target.value) })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
@@ -729,7 +729,7 @@ const PaperworkPage: React.FC = () => {
             </div>
 
             <p className="text-sm text-gray-600 mb-3">
-              Created: {format(doc.created_at, 'MMM d, yyyy h:mm a')}
+              Created: {format(new Date(doc.created_at), 'MMM d, yyyy h:mm a')}
             </p>
 
             <div className="flex gap-2">
@@ -816,7 +816,7 @@ const PaperworkPage: React.FC = () => {
 
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-500">
-                  Created by {selectedDocument.created_by} on {format(selectedDocument.created_at, 'MMMM d, yyyy h:mm a')}
+                  Created by {selectedDocument.created_by} on {format(new Date(selectedDocument.created_at), 'MMMM d, yyyy h:mm a')}
                 </p>
               </div>
             </div>

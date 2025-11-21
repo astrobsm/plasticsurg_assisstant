@@ -796,7 +796,7 @@ export const IntraoperativeFindingsForm: React.FC<IntraoperativeFindingsFormProp
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text(`AI-Generated Postoperative Care Plan | Generated: ${new Date().toLocaleString('en-NG')}`, pageWidth / 2, pageHeight - 9, { align: 'center' });
+    doc.text(`Auto-Generated Postoperative Care Plan | Generated: ${new Date().toLocaleString('en-NG')}`, pageWidth / 2, pageHeight - 9, { align: 'center' });
     doc.text('PLASTIC AND RECONSTRUCTIVE SURGERY UNIT | This is a comprehensive care guide - individualize based on patient needs', pageWidth / 2, pageHeight - 4, { align: 'center' });
 
     // Save PDF

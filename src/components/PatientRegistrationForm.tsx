@@ -1914,7 +1914,7 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('🤖 CLINICAL RECOMMENDATIONS (AI-GENERATED)', 15, yPosition + 6);
+    doc.text('🤖 CLINICAL RECOMMENDATIONS (AUTO-GENERATED)', 15, yPosition + 6);
     yPosition += 12;
     doc.setTextColor(0, 0, 0);
 
@@ -3185,10 +3185,10 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* DVT AI Recommendations */}
+        {/* DVT Clinical Recommendations */}
         {aiRecommendations.dvt.recommendations.length > 0 && (
           <div className="mt-4 p-4 bg-white rounded-lg border-l-4 border-blue-500">
-            <h5 className="font-medium text-blue-900 mb-2">🤖 AI Clinical Recommendations</h5>
+            <h5 className="font-medium text-blue-900 mb-2">🤖 Clinical Recommendations</h5>
             <ul className="space-y-1">
               {aiRecommendations.dvt.recommendations.map((rec, index) => (
                 <li key={index} className="text-sm text-gray-700">• {rec}</li>
@@ -3325,10 +3325,10 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
           ))}
         </div>
 
-        {/* Pressure Sore AI Recommendations */}
+        {/* Pressure Sore Clinical Recommendations */}
         {aiRecommendations.pressureSore.recommendations.length > 0 && (
           <div className="mt-4 p-4 bg-white rounded-lg border-l-4 border-blue-500">
-            <h5 className="font-medium text-blue-900 mb-2">🤖 AI Clinical Recommendations</h5>
+            <h5 className="font-medium text-blue-900 mb-2">🤖 Clinical Recommendations</h5>
             <ul className="space-y-1">
               {aiRecommendations.pressureSore.recommendations.map((rec, index) => (
                 <li key={index} className="text-sm text-gray-700">• {rec}</li>
@@ -3372,7 +3372,7 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
               >
                 📋 Generate Comprehensive Care Plan
-                <span className="text-xs bg-green-800 px-2 py-0.5 rounded">AI Clinical Recommendations</span>
+                <span className="text-xs bg-green-800 px-2 py-0.5 rounded">Clinical Recommendations</span>
               </button>
             </div>
           </div>
@@ -3482,10 +3482,10 @@ export const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* Nutritional AI Recommendations */}
+        {/* Nutritional Clinical Recommendations */}
         {aiRecommendations.nutritional.recommendations.length > 0 && (
           <div className="mt-4 p-4 bg-white rounded-lg border-l-4 border-blue-500">
-            <h5 className="font-medium text-blue-900 mb-2">🤖 AI Clinical Recommendations</h5>
+            <h5 className="font-medium text-blue-900 mb-2">🤖 Clinical Recommendations</h5>
             <ul className="space-y-1">
               {aiRecommendations.nutritional.recommendations.map((rec, index) => (
                 <li key={index} className="text-sm text-gray-700">• {rec}</li>

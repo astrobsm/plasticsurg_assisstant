@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve First Admin User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0E9F6E;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #E0F2FE;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0EA5E9;
+        }
+        .warning {
+            background: #FEF3C7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #F59E0B;
+        }
+        .success {
+            background: #D1FAE5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #10B981;
+        }
+        .error {
+            background: #FEE2E2;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #EF4444;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0E9F6E;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0D8A5F;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .user-list {
+            margin-top: 20px;
+        }
+        .user-card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .user-card.approved {
+            border-left: 4px solid #10B981;
+        }
+        .user-card.pending {
+            border-left: 4px solid #F59E0B;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge.approved {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .badge.pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Approve First Admin User</h1>
+        
+        <div class="info">
+            <strong>📋 Instructions:</strong><br>
+            1. First, load all registered users from the database<br>
+            2. Find the user you want to make admin<br>
+            3. Approve and set them as super_admin<br>
+            4. You can then log in with that user to access the admin panel
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This tool directly modifies the PostgreSQL database. Use it only for approving the first admin user. After that, use the normal Admin panel.
+        </div>
+
+        <h2>Step 1: Load Users</h2>
+        <button onclick="loadUsers()">🔄 Load All Users from Database</button>
+        
+        <div id="result"></div>
+
+        <div class="user-list" id="userList"></div>
+
+        <h2>Step 2: Manual SQL Query (Alternative)</h2>
+        <div class="info">
+            If you have access to PostgreSQL directly, run this query to approve a user:
+        </div>
+        <pre>-- Replace 'user@email.com' with the actual email
+UPDATE users 
+SET is_approved = true, 
+    is_active = true,
+    role = 'super_admin'
+WHERE email = 'user@email.com';
+
+-- Verify the update
+SELECT email, full_name, role, is_approved, is_active 
+FROM users 
+WHERE email = 'user@email.com';</pre>
+    </div>
+
+    <script>
+        const API_URL = 'https://plasticsurg.duckdns.org/api';
+
+        async function loadUsers() {
+            const resultDiv = document.getElementById('result');
+            const userListDiv = document.getElementById('userList');
+            
+            resultDiv.innerHTML = '<div class="info">⏳ Loading users...</div>';
+            userListDiv.innerHTML = '';
+
+            try {
+                // Try to get users without auth first (this will fail, but shows the error)
+                const response = await fetch(`${API_URL}/users/all`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const users = await response.json();
+                
+                resultDiv.innerHTML = `<div class="success">✅ Found ${users.length} users</div>`;
+                
+                if (users.length === 0) {
+                    userListDiv.innerHTML = '<div class="warning">No users found. Register a user first!</div>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const userCard = document.createElement('div');
+                    userCard.className = `user-card ${user.is_approved ? 'approved' : 'pending'}`;
+                    userCard.innerHTML = `
+                        <div>
+                            <strong>${user.full_name}</strong>
+                            <span class="badge ${user.is_approved ? 'approved' : 'pending'}">
+                                ${user.is_approved ? 'APPROVED' : 'PENDING'}
+                            </span>
+                        </div>
+                        <div style="margin-top: 10px; color: #666;">
+                            📧 ${user.email}<br>
+                            👤 Role: ${user.role}<br>
+                            🏥 Department: ${user.department || 'N/A'}<br>
+                            📅 Created: ${new Date(user.created_at).toLocaleString()}
+                        </div>
+                        ${!user.is_approved ? `
+                            <button onclick="approveUser('${user.id}', '${user.email}')" style="margin-top: 10px;">
+                                ✅ Approve as Super Admin
+                            </button>
+                        ` : ''}
+                    `;
+                    userListDiv.appendChild(userCard);
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error loading users:</strong><br>
+                        ${error.message}<br><br>
+                        <strong>This means:</strong> You need to create a backend endpoint to list all users without authentication, 
+                        OR you need to use the SQL query method below.
+                    </div>
+                `;
+            }
+        }
+
+        async function approveUser(userId, email) {
+            if (!confirm(`Approve ${email} as Super Admin?`)) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">⏳ Approving user...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/users/${userId}/approve-direct`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        is_approved: true,
+                        is_active: true,
+                        role: 'super_admin'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                resultDiv.innerHTML = `<div class="success">✅ User approved successfully! You can now log in as ${email}</div>`;
+                setTimeout(() => loadUsers(), 1000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error approving user:</strong><br>
+                        ${error.message}<br><br>
+                        Please use the SQL query method instead.
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-load on page load
+        window.addEventListener('load', () => {
+            document.getElementById('result').innerHTML = '<div class="info">👆 Click "Load All Users" to start</div>';
+        });
+    </script>
+</body>
+</html>

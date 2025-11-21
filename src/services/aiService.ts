@@ -86,16 +86,19 @@ class AIService {
 
   private async checkBackendConfiguration() {
     try {
-      const response = await fetch('/api/ai/settings', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      // First check localStorage
+      const localKey = localStorage.getItem('openai_api_key');
+      if (localKey && localKey !== '••••••••••••••••') {
+        this.isConfigured = true;
+        return;
+      }
+
+      // Otherwise check backend
+      const response = await fetch('/api/ai/settings');
       
       if (response.ok) {
         const data = await response.json();
-        const keySetting = data.settings?.find((s: any) => s.setting_key === 'openai_api_key');
-        this.isConfigured = !!keySetting?.setting_value;
+        this.isConfigured = data.configured || data.hasOpenAI;
       }
     } catch {
       this.isConfigured = false;

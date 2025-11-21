@@ -28,6 +28,7 @@ import {
   PatientDemographics
 } from '../services/labService';
 import { db } from '../db/database';
+import { patientService } from '../services/patientService';
 
 type LabTab = 'investigations' | 'results' | 'upload' | 'trends' | 'requests' | 'gfr';
 
@@ -40,11 +41,25 @@ export default function Labs() {
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [labStats, setLabStats] = useState<any>(null);
+  const [patients, setPatients] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
 
   useEffect(() => {
     loadLabData();
     loadLabStatistics();
   }, [selectedPatient]);
+
+  const loadPatients = async () => {
+    try {
+      const allPatients = await patientService.getAllPatients();
+      setPatients(allPatients);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
 
   const loadLabData = async () => {
     try {
@@ -125,9 +140,11 @@ export default function Labs() {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
             >
               <option value="">All Patients</option>
-              <option value="patient1">John Doe</option>
-              <option value="patient2">Jane Smith</option>
-              <option value="patient3">Mike Johnson</option>
+              {patients.map(patient => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.first_name} {patient.last_name} ({patient.hospital_number})
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -280,7 +297,7 @@ const InvestigationsSection = ({ investigations, onRefresh, searchQuery }: any) 
                 {getStatusIcon(investigation.status)}
                 <div>
                   <h3 className="font-semibold text-gray-900">{investigation.patient_name}</h3>
-                  <p className="text-sm text-gray-600">{format(investigation.request_date, 'MMM d, yyyy')}</p>
+                  <p className="text-sm text-gray-600">{format(new Date(investigation.request_date), 'MMM d, yyyy')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -437,12 +454,12 @@ const ResultsSection = ({ results, investigations, onRefresh, searchQuery }: any
               </div>
             </div>
 
-            {/* AI Interpretation */}
+            {/* Clinical Interpretation */}
             {result.ai_interpretation && (
               <div className="border-t pt-3">
                 <div className="flex items-center space-x-2 mb-2">
                   <Brain className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-600">AI Interpretation</span>
+                  <span className="text-sm font-medium text-purple-600">Clinical Interpretation</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(result.ai_interpretation.risk_level)}`}>
                     {result.ai_interpretation.risk_level.toUpperCase()}
                   </span>
@@ -571,7 +588,7 @@ const UploadSection = ({ investigations, onRefresh }: any) => {
               <option value="">Select Investigation</option>
               {investigations.map((inv: LabInvestigation) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.patient_name} - {format(inv.request_date, 'MMM d, yyyy')}
+                  {inv.patient_name} - {format(new Date(inv.request_date), 'MMM d, yyyy')}
                 </option>
               ))}
             </select>
@@ -809,7 +826,7 @@ const TrendsSection = ({ selectedPatient }: any) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {trend.results.slice(-6).map((result, resultIndex) => (
                     <div key={resultIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span className="text-sm text-gray-600">{format(result.date, 'MMM d')}</span>
+                      <span className="text-sm text-gray-600">{format(new Date(result.date), 'MMM d')}</span>
                       <span className="text-sm font-medium">{result.value}</span>
                       <span className={`text-xs px-1 py-0.5 rounded ${
                         result.flag === 'normal' ? 'bg-green-100 text-green-800' :
@@ -1190,12 +1207,12 @@ const ResultDetailModal = ({ result, onClose }: { result: LabResult; onClose: ()
             </div>
           </div>
 
-          {/* AI Interpretation */}
+          {/* Clinical Interpretation */}
           {result.ai_interpretation && (
             <div className="border rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
                 <Brain className="h-5 w-5 text-purple-600" />
-                <h4 className="font-semibold text-gray-900">AI Interpretation</h4>
+                <h4 className="font-semibold text-gray-900">Clinical Interpretation</h4>
               </div>
               
               <div className="space-y-3">

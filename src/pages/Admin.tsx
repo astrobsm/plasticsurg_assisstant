@@ -432,7 +432,7 @@ export default function Admin() {
                     <p className="text-xs text-gray-500">{log.details}</p>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {format(log.timestamp, 'MMM d, HH:mm')}
+                    {format(new Date(log.timestamp), 'MMM d, HH:mm')}
                   </div>
                 </div>
               ))}
@@ -539,7 +539,7 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.lastLogin ? format(user.lastLogin, 'MMM d, yyyy HH:mm') : 'Never'}
+                        {user.lastLogin ? format(new Date(user.lastLogin), 'MMM d, yyyy HH:mm') : 'Never'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
@@ -668,7 +668,7 @@ export default function Admin() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Last Backup</span>
                     <span className="font-medium">
-                      {metrics.lastBackup ? format(metrics.lastBackup, 'MMM d, yyyy HH:mm') : 'Never'}
+                      {metrics.lastBackup ? format(new Date(metrics.lastBackup), 'MMM d, yyyy HH:mm') : 'Never'}
                     </span>
                   </div>
                 </div>
@@ -733,7 +733,7 @@ export default function Admin() {
                       </div>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {format(log.timestamp, 'MMM d, yyyy HH:mm:ss')}
+                      {format(new Date(log.timestamp), 'MMM d, yyyy HH:mm:ss')}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{log.details}</p>

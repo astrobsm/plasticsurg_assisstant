@@ -227,6 +227,40 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// Register endpoint alias for /api/auth/register
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, full_name, role, department, specialization, license_number, phone } = req.body;
+    
+    if (!email || !password || !full_name || !role) {
+      return res.status(400).json({ error: 'Required fields missing' });
+    }
+    
+    // Check if user exists
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const result = await pool.query(`
+      INSERT INTO users (email, password, full_name, role, department, specialization, license_number, phone)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, email, full_name, role, department, specialization, license_number, phone, is_approved
+    `, [email.toLowerCase(), hashedPassword, full_name, role, department, specialization, license_number, phone]);
+    
+    res.status(201).json({ 
+      user: result.rows[0],
+      message: 'Registration successful. Please wait for admin approval.'
+    });
+    
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get current user
 app.get('/api/user', authenticateToken, async (req, res) => {
   try {
@@ -312,6 +346,63 @@ app.patch('/api/users/:id/status', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Update user status error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all users without auth (only if NO approved admin exists)
+app.get('/api/users/all', async (req, res) => {
+  try {
+    // Check if any super_admin exists
+    const adminCheck = await pool.query(
+      "SELECT COUNT(*) as count FROM users WHERE role = 'super_admin' AND is_approved = true"
+    );
+    
+    if (parseInt(adminCheck.rows[0].count) > 0) {
+      return res.status(403).json({ error: 'Admin already exists. Use authenticated endpoint.' });
+    }
+    
+    const result = await pool.query(`
+      SELECT id, email, full_name, role, department, specialization, 
+             license_number, phone, is_approved, is_active, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Approve first admin without auth (only if NO approved admin exists)
+app.post('/api/users/:id/approve-direct', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if any super_admin exists
+    const adminCheck = await pool.query(
+      "SELECT COUNT(*) as count FROM users WHERE role = 'super_admin' AND is_approved = true"
+    );
+    
+    if (parseInt(adminCheck.rows[0].count) > 0) {
+      return res.status(403).json({ error: 'Admin already exists. Use authenticated endpoint.' });
+    }
+    
+    // Approve and make super admin
+    await pool.query(`
+      UPDATE users 
+      SET is_approved = true, 
+          is_active = true, 
+          role = 'super_admin',
+          updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $1
+    `, [id]);
+    
+    res.json({ message: 'First admin user approved successfully' });
+  } catch (error) {
+    console.error('Direct approve error:', error);
+    res.status(500).json({ error: 'Failed to approve user' });
   }
 });
 
@@ -451,6 +542,27 @@ app.get('/api/sync/patients', authenticateToken, async (req, res) => {
     res.json({ patients: result.rows });
   } catch (error) {
     console.error('Get patients error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get single patient by ID
+app.get('/api/sync/patients/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'SELECT * FROM patients WHERE id = $1 AND deleted = false',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Get patient error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

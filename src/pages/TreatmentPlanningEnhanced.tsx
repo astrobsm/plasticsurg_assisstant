@@ -353,11 +353,11 @@ export default function TreatmentPlanningEnhanced() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">Admission:</span>{' '}
-                <span className="font-medium">{format(selectedPlan.admission_date, 'MMM d, yyyy')}</span>
+                <span className="font-medium">{format(new Date(selectedPlan.admission_date), 'MMM d, yyyy')}</span>
               </div>
               <div>
                 <span className="text-gray-600">Planned Discharge:</span>{' '}
-                <span className="font-medium">{format(selectedPlan.planned_discharge_date, 'MMM d, yyyy')}</span>
+                <span className="font-medium">{format(new Date(selectedPlan.planned_discharge_date), 'MMM d, yyyy')}</span>
               </div>
               <div>
                 <span className="text-gray-600">Consultant:</span>{' '}
@@ -402,7 +402,7 @@ export default function TreatmentPlanningEnhanced() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-medium text-gray-900">
-                          {format(review.review_date, 'MMM d, yyyy')}
+                          {format(new Date(review.review_date), 'MMM d, yyyy')}
                         </div>
                         <div className="text-sm text-gray-600">House Officer: {review.house_officer}</div>
                       </div>
@@ -480,7 +480,7 @@ export default function TreatmentPlanningEnhanced() {
                       <div>
                         <div className="font-medium text-gray-900">{lab.test_name}</div>
                         <div className="text-sm text-gray-600">
-                          Frequency: {lab.frequency} | Start: {format(lab.start_date, 'MMM d, yyyy')}
+                          Frequency: {lab.frequency} | Start: {format(new Date(lab.start_date), 'MMM d, yyyy')}
                         </div>
                       </div>
                       <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
@@ -528,7 +528,7 @@ export default function TreatmentPlanningEnhanced() {
                       <div>
                         <div className="font-medium text-gray-900">{procedure.procedure_name}</div>
                         <div className="text-sm text-gray-600">
-                          Planned: {format(procedure.planned_date, 'MMM d, yyyy')}
+                          Planned: {format(new Date(procedure.planned_date), 'MMM d, yyyy')}
                           {procedure.surgeon && ` | Surgeon: ${procedure.surgeon}`}
                         </div>
                       </div>
@@ -607,8 +607,8 @@ export default function TreatmentPlanningEnhanced() {
                           {med.dosage} {med.route} {med.frequency}
                         </div>
                         <div className="text-sm text-gray-600">
-                          Start: {format(med.start_date, 'MMM d, yyyy')}
-                          {med.end_date && ` | End: ${format(med.end_date, 'MMM d, yyyy')}`}
+                          Start: {format(new Date(med.start_date), 'MMM d, yyyy')}
+                          {med.end_date && ` | End: ${format(new Date(med.end_date), 'MMM d, yyyy')}`}
                         </div>
                       </div>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${

@@ -196,7 +196,7 @@ export const PatientProfile: React.FC = () => {
                   <span className="text-gray-500">Address:</span>
                   <span className="font-medium text-right">{patient.address}</span>
                 </div>
-                {patient.allergies && patient.allergies.length > 0 && (
+                {patient.allergies && Array.isArray(patient.allergies) && patient.allergies.length > 0 && (
                   <div>
                     <span className="text-gray-500 text-sm">Allergies:</span>
                     <div className="mt-1 space-y-1">

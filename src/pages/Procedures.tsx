@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { PreoperativeAssessmentForm } from '../components/procedures/PreoperativeAssessment';
 import { WHOSafetyChecklistForm } from '../components/procedures/WHOSafetyChecklist';
 import { IntraoperativeFindingsForm } from '../components/procedures/IntraoperativeFindings';
 import { PostoperativeCareForm } from '../components/procedures/PostoperativeCare';
 import { WoundCareAssessmentForm } from '../components/procedures/WoundCareAssessment';
 import { SurgicalFitnessScoreForm } from '../components/procedures/SurgicalFitnessScore';
+import { patientService } from '../services/patientService';
 
 export const Procedures: React.FC = () => {
   const [activeModule, setActiveModule] = useState('overview');
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedProcedureId, setSelectedProcedureId] = useState<string>('');
+  const [patients, setPatients] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      const allPatients = await patientService.getAllPatients();
+      setPatients(allPatients);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
 
   const modules = [
     { id: 'overview', name: 'Overview', icon: '📋', description: 'Procedure management dashboard' },
-    { id: 'preop', name: 'Preoperative Assessment', icon: '🔍', description: 'Patient fitness and risk evaluation' },
     { id: 'fitness', name: 'Surgical Fitness Scoring', icon: '📊', description: 'Comprehensive risk scoring system' },
     { id: 'who-checklist', name: 'WHO Safety Checklist', icon: '✅', description: 'World Health Organization safety protocols' },
     { id: 'intraop', name: 'Intraoperative Findings', icon: '🏥', description: 'Surgical procedure documentation' },
@@ -25,16 +38,6 @@ export const Procedures: React.FC = () => {
     switch (activeModule) {
       case 'overview':
         return <ProcedureOverview />;
-      case 'preop':
-        return (
-          <PreoperativeAssessmentForm 
-            patientId={selectedPatientId}
-            procedureId={selectedProcedureId}
-            onComplete={(assessmentId) => {
-              console.log('Preoperative assessment completed:', assessmentId);
-            }}
-          />
-        );
       case 'fitness':
         return (
           <SurgicalFitnessScoreForm 
@@ -107,8 +110,11 @@ export const Procedures: React.FC = () => {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">Select Patient</option>
-                  <option value="patient_1">John Doe (HOSP/2024/0001)</option>
-                  <option value="patient_2">Jane Smith (HOSP/2024/0002)</option>
+                  {patients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name} ({patient.hospital_number})
+                    </option>
+                  ))}
                 </select>
                 
                 <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
@@ -192,6 +198,27 @@ export const Procedures: React.FC = () => {
 const ProcedureOverview: React.FC = () => {
   return (
     <div className="space-y-6">
+      {/* Important Notice */}
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-blue-800">Preoperative Assessments</h3>
+            <div className="mt-2 text-sm text-blue-700">
+              <p>
+                Comprehensive preoperative assessments (including bleeding risk, DVT risk, cardiac risk, and pressure sore assessments) 
+                are now managed through the <strong>Scheduling → Surgery Booking</strong> module. 
+                Click "Complete Preop Assessment" when booking a surgery to access the full assessment form.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Current Procedures */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">

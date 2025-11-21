@@ -239,7 +239,7 @@ export default function TopicManagement() {
               <span>Topic Management System</span>
             </h1>
             <p className="text-gray-600 mt-2">
-              Upload topics for weekly AI-generated educational content and MCQ generation
+              Upload topics for weekly auto-generated educational content and MCQ generation
             </p>
           </div>
           <div className="flex items-center space-x-2">

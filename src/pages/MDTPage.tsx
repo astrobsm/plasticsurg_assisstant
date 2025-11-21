@@ -96,7 +96,7 @@ const MDTPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const patient = patients.find(p => p.id === parseInt(selectedPatientId));
+        const patient = patients.find(p => String(p.id) === selectedPatientId);
         if (!patient) return;
 
         await mdtService.createPatientTeam(

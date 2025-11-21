@@ -241,7 +241,7 @@ export default function CMEArticleViewer({ articleId, userId, onClose }: CMEArti
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{article.title}</h1>
           <p className="text-gray-600 mb-3">{article.subcategory}</p>
           <div className="text-sm text-gray-500">
-            Published {format(article.published_date, 'MMMM d, yyyy')} • By {article.author}
+            Published {article.published_date ? format(new Date(article.published_date), 'MMMM d, yyyy') : 'Date unavailable'} • By {article.author}
           </div>
         </div>
       </div>

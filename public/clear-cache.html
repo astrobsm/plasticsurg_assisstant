@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clear Browser Cache - Plastic Surgeon Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0E9F6E 0%, #047857 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    h1 {
+      color: #0E9F6E;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .subtitle {
+      color: #6B7280;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .status {
+      background: #F3F4F6;
+      border-left: 4px solid #0E9F6E;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    
+    .status.success {
+      background: #D1FAE5;
+      border-color: #0E9F6E;
+    }
+    
+    .status.error {
+      background: #FEE2E2;
+      border-color: #DC2626;
+    }
+    
+    .status-text {
+      font-size: 14px;
+      color: #111827;
+    }
+    
+    button {
+      background: #0E9F6E;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #047857;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(14, 159, 110, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      background: #9CA3AF;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .danger {
+      background: #DC2626;
+    }
+    
+    .danger:hover {
+      background: #B91C1C;
+    }
+    
+    .info-box {
+      background: #FEF3C7;
+      border: 1px solid #F59E0B;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    
+    .info-box h3 {
+      color: #92400E;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .info-box ul {
+      margin-left: 20px;
+      color: #78350F;
+      font-size: 13px;
+    }
+    
+    .info-box li {
+      margin-bottom: 4px;
+    }
+    
+    .progress {
+      display: none;
+      margin: 20px 0;
+    }
+    
+    .progress.show {
+      display: block;
+    }
+    
+    .progress-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #F9FAFB;
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+    
+    .progress-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    .spinner {
+      border: 3px solid #E5E7EB;
+      border-top: 3px solid #0E9F6E;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .checkmark {
+      background: #0E9F6E;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .xmark {
+      background: #DC2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗑️ Clear Browser Cache</h1>
+    <p class="subtitle">UNTH Plastic Surgery Assistant PWA</p>
+    
+    <div class="info-box">
+      <h3>⚠️ What will be cleared:</h3>
+      <ul>
+        <li>Service Workers (PWA offline capability)</li>
+        <li>Cache Storage (cached API responses)</li>
+        <li>Local Storage (stored preferences, NOT authentication)</li>
+        <li>Session Storage (temporary session data)</li>
+        <li>IndexedDB (offline patient data)</li>
+      </ul>
+    </div>
+    
+    <div id="status" class="status">
+      <div class="status-text">Ready to clear cache. Click the button below.</div>
+    </div>
+    
+    <div id="progress" class="progress">
+      <div id="sw-progress" class="progress-item">
+        <div class="progress-icon spinner"></div>
+        <span>Unregistering Service Workers...</span>
+      </div>
+      <div id="cache-progress" class="progress-item">
+        <div class="progress-icon spinner"></div>
+        <span>Clearing Cache Storage...</span>
+      </div>
+      <div id="local-progress" class="progress-item">
+        <div class="progress-icon spinner"></div>
+        <span>Clearing Local Storage...</span>
+      </div>
+      <div id="session-progress" class="progress-item">
+        <div class="progress-icon spinner"></div>
+        <span>Clearing Session Storage...</span>
+      </div>
+      <div id="idb-progress" class="progress-item">
+        <div class="progress-icon spinner"></div>
+        <span>Clearing IndexedDB...</span>
+      </div>
+    </div>
+    
+    <button id="clearBtn" onclick="clearAllCache()">🗑️ Clear All Cache</button>
+    <button onclick="window.location.href='/'">← Back to App</button>
+  </div>
+
+  <script>
+    async function clearAllCache() {
+      const statusDiv = document.getElementById('status');
+      const progressDiv = document.getElementById('progress');
+      const clearBtn = document.getElementById('clearBtn');
+      
+      clearBtn.disabled = true;
+      progressDiv.classList.add('show');
+      
+      const results = {
+        serviceWorker: false,
+        cache: false,
+        localStorage: false,
+        sessionStorage: false,
+        indexedDB: false
+      };
+      
+      try {
+        // 1. Unregister Service Workers
+        updateProgress('sw-progress', 'loading');
+        try {
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+              await registration.unregister();
+            }
+            results.serviceWorker = true;
+            updateProgress('sw-progress', 'success');
+          } else {
+            updateProgress('sw-progress', 'success', 'Not supported');
+          }
+        } catch (err) {
+          console.error('Service Worker error:', err);
+          updateProgress('sw-progress', 'error');
+        }
+        
+        // 2. Clear Cache Storage
+        updateProgress('cache-progress', 'loading');
+        try {
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            results.cache = true;
+            updateProgress('cache-progress', 'success', `Cleared ${cacheNames.length} caches`);
+          } else {
+            updateProgress('cache-progress', 'success', 'Not supported');
+          }
+        } catch (err) {
+          console.error('Cache Storage error:', err);
+          updateProgress('cache-progress', 'error');
+        }
+        
+        // 3. Clear Local Storage
+        updateProgress('local-progress', 'loading');
+        try {
+          const itemCount = localStorage.length;
+          localStorage.clear();
+          results.localStorage = true;
+          updateProgress('local-progress', 'success', `Cleared ${itemCount} items`);
+        } catch (err) {
+          console.error('Local Storage error:', err);
+          updateProgress('local-progress', 'error');
+        }
+        
+        // 4. Clear Session Storage
+        updateProgress('session-progress', 'loading');
+        try {
+          const itemCount = sessionStorage.length;
+          sessionStorage.clear();
+          results.sessionStorage = true;
+          updateProgress('session-progress', 'success', `Cleared ${itemCount} items`);
+        } catch (err) {
+          console.error('Session Storage error:', err);
+          updateProgress('session-progress', 'error');
+        }
+        
+        // 5. Clear IndexedDB
+        updateProgress('idb-progress', 'loading');
+        try {
+          if ('indexedDB' in window) {
+            const databases = await indexedDB.databases();
+            for (let db of databases) {
+              if (db.name) {
+                indexedDB.deleteDatabase(db.name);
+              }
+            }
+            results.indexedDB = true;
+            updateProgress('idb-progress', 'success', `Deleted ${databases.length} databases`);
+          } else {
+            updateProgress('idb-progress', 'success', 'Not supported');
+          }
+        } catch (err) {
+          console.error('IndexedDB error:', err);
+          updateProgress('idb-progress', 'error');
+        }
+        
+        // Show final status
+        const allSuccess = Object.values(results).every(r => r);
+        statusDiv.className = allSuccess ? 'status success' : 'status error';
+        statusDiv.innerHTML = `
+          <div class="status-text">
+            <strong>${allSuccess ? '✅ Cache cleared successfully!' : '⚠️ Cache partially cleared'}</strong><br>
+            <small>Please close all app tabs and reopen to see changes.</small>
+          </div>
+        `;
+        
+        clearBtn.textContent = '✅ Cache Cleared';
+        
+        // Auto-reload after 3 seconds
+        setTimeout(() => {
+          if (confirm('Cache cleared! Reload the page now?')) {
+            window.location.reload(true);
+          }
+        }, 2000);
+        
+      } catch (err) {
+        console.error('Fatal error:', err);
+        statusDiv.className = 'status error';
+        statusDiv.innerHTML = `
+          <div class="status-text">
+            <strong>❌ Error clearing cache</strong><br>
+            <small>${err.message}</small>
+          </div>
+        `;
+        clearBtn.disabled = false;
+      }
+    }
+    
+    function updateProgress(elementId, status, message = '') {
+      const element = document.getElementById(elementId);
+      const icon = element.querySelector('.progress-icon');
+      const text = element.querySelector('span');
+      
+      icon.className = 'progress-icon';
+      
+      if (status === 'loading') {
+        icon.classList.add('spinner');
+      } else if (status === 'success') {
+        icon.classList.add('checkmark');
+        icon.textContent = '✓';
+        if (message) {
+          text.innerHTML = text.textContent.split('...')[0] + ` - <small>${message}</small>`;
+        } else {
+          text.innerHTML = text.textContent.replace('...', ' ✅');
+        }
+      } else if (status === 'error') {
+        icon.classList.add('xmark');
+        icon.textContent = '✗';
+        text.innerHTML = text.textContent.replace('...', ' ❌');
+      }
+    }
+  </script>
+</body>
+</html>

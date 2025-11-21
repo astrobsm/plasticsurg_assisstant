@@ -1,5 +1,5 @@
 import { db } from '../db/database';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 
 export interface PatientSummary {
   id: string;
@@ -27,32 +27,45 @@ export interface PatientSummary {
 class PatientSummaryService {
   // Generate AI-powered patient summary
   async generateAISummary(patientId: string): Promise<PatientSummary> {
-    // Get patient data
-    const patient = await db.patients.get(parseInt(patientId));
+    // Get patient data - try by serverId first, then by numeric id
+    let patient = await db.patients.where('id').equals(patientId).first();
+    
+    if (!patient) {
+      // Try as numeric ID if patientId is a number
+      const numericId = parseInt(patientId);
+      if (!isNaN(numericId)) {
+        patient = await db.patients.get(numericId);
+      }
+    }
+    
     if (!patient) {
       throw new Error('Patient not found');
     }
 
-    // Get treatment plans
+    // Get treatment plans - use the actual patient id from the patient object
+    const actualPatientId = patient.id || patientId;
     const treatmentPlans = await db.treatment_plans
       .where('patient_id')
-      .equals(parseInt(patientId))
+      .equals(actualPatientId)
       .toArray();
 
     // Get procedures from scheduling
     const procedures = await db.surgery_bookings
       .where('patient_id')
-      .equals(patientId)
+      .equals(actualPatientId)
       .toArray();
 
     // Get lab results
     const labResults = await db.lab_results
       .where('patient_id')
-      .equals(parseInt(patientId))
+      .equals(actualPatientId)
       .toArray();
 
     // Calculate length of stay (using first treatment plan admission date)
-    const admissionDate = treatmentPlans[0]?.created_at || patient.created_at;
+    const rawAdmissionDate = treatmentPlans[0]?.created_at || patient.created_at;
+    const admissionDate = typeof rawAdmissionDate === 'string' 
+      ? parseISO(rawAdmissionDate) 
+      : new Date(rawAdmissionDate);
     const currentDate = new Date();
     const lengthOfStay = differenceInDays(currentDate, admissionDate);
 
@@ -69,7 +82,10 @@ class PatientSummaryService {
         overview: this.generateOverview(patient, treatmentPlans, lengthOfStay),
         diagnosis: treatmentPlans.map(p => p.diagnosis).join('; ') || 'No diagnosis recorded',
         treatment_progress: this.generateTreatmentProgress(treatmentPlans),
-        procedures_performed: procedures.map(p => `${p.procedure_name} (${format(p.date, 'MMM d, yyyy')})`),
+        procedures_performed: procedures.map(p => {
+          const procDate = typeof p.date === 'string' ? parseISO(p.date) : new Date(p.date);
+          return `${p.procedure_name} (${format(procDate, 'MMM d, yyyy')})`;
+        }),
         medications: this.extractMedications(treatmentPlans),
         lab_results_summary: this.summarizeLabResults(labResults),
         complications: this.identifyComplications(treatmentPlans),
@@ -96,8 +112,8 @@ class PatientSummaryService {
            `Comorbidities: ${patient.comorbidities?.join(', ') || 'None documented'}.`;
   }
 
-  private calculateAge(dob: string): number {
-    const birthDate = new Date(dob);
+  private calculateAge(dob: string | Date): number {
+    const birthDate = typeof dob === 'string' ? parseISO(dob) : new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();

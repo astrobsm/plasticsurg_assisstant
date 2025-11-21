@@ -153,7 +153,7 @@ const Education: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('API key saved successfully! AI features are now enabled.');
+        alert('API key saved successfully! Clinical features are now enabled.');
       } else {
         alert('Failed to save API key. Please check your permissions.');
       }
@@ -600,7 +600,7 @@ const Education: React.FC = () => {
 
         {activeTab === 'settings' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-clinical-dark">AI Settings</h2>
+            <h2 className="text-xl font-semibold text-clinical-dark">Clinical Assistant Settings</h2>
             
             <div className="max-w-md space-y-4">
               <div>
@@ -625,14 +625,14 @@ const Education: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-xs text-clinical mt-1">
-                  Required for AI-powered topic generation and personalized recommendations
+                  Required for automated topic generation and personalized recommendations
                 </p>
               </div>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Lightbulb className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">AI Features</span>
+                  <span className="font-medium text-blue-900">Clinical Features</span>
                 </div>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Weekly topic generation based on clinical data</li>
@@ -648,7 +648,7 @@ const Education: React.FC = () => {
                   <span className="font-medium text-yellow-900">Status</span>
                 </div>
                 <p className="text-sm text-yellow-800">
-                  AI Service: {aiService.isReady() ? 
+                  Service: {aiService.isReady() ? 
                     <span className="text-green-600 font-medium">Connected</span> : 
                     <span className="text-red-600 font-medium">Not Configured</span>
                   }
