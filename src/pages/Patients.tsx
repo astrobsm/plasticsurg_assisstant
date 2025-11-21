@@ -35,10 +35,10 @@ export const Patients: React.FC = () => {
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = searchTerm === '' || 
-      patient.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.hospital_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone?.includes(searchTerm);
+      (patient.first_name && patient.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.last_name && patient.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.hospital_number && patient.hospital_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.phone && patient.phone.includes(searchTerm));
     
     // For now, treating all patients as active since we don't have discharge status in the schema
     const matchesFilter = filterStatus === 'all' || filterStatus === 'active';

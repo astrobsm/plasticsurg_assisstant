@@ -60,12 +60,12 @@ export default function Analytics() {
     let filtered = userPerformance;
 
     if (filterRole !== 'all') {
-      filtered = filtered.filter(p => p.user_role.toLowerCase() === filterRole);
+      filtered = filtered.filter(p => p.user_role && p.user_role.toLowerCase() === filterRole);
     }
 
     if (searchTerm) {
       filtered = filtered.filter(p => 
-        p.user_name.toLowerCase().includes(searchTerm.toLowerCase())
+        p.user_name && p.user_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
